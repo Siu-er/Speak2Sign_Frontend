@@ -47,7 +47,7 @@ export function VADVoiceRecorder({
                                      fastApiUrl =
                                          process.env.NEXT_PUBLIC_FALLBACK_TRANSCRIBER_URL ||
                                          "https://australiaeast.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version=2024-11-15",
-                                     fastApiKey = process.env.NEXT_PUBLIC_FALLBACK_API_KEY || "7feed90e615f47f88fdf24fd66743a29",
+                                     fastApiKey = process.env.NEXT_PUBLIC_FALLBACK_API_KEY || "85f95629c8c8447d8db6a9a2b9555fd2",
                                  }: VADVoiceRecorderProps) {
     const [status, setStatus] = useState<"idle" | "listening" | "error">("idle");
     const [isProcessing, setIsProcessing] = useState(false);
