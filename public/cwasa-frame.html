@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Avatar</title>
+  <link rel="stylesheet" href="/jas/loc2025/cwa/cwasa.css" />
+  <style>
+    html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+    #stage { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow: hidden; }
+    /* Anchor the avatar to the top so the head and hands stay in view; the
+       container is shorter than the avatar, clipping the legs. */
+    .CWASAAvatar { width: 300px; height: 250px; }
+    .controls { display: none; }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <div class="CWASAAvatar av0"></div>
+    <div class="controls">
+      <div class="CWASAAvMenu av0"></div>
+      <div class="CWASASpeed av0"></div>
+      <input type="text" class="txtSiGMLURL av0" value="" />
+    </div>
+  </div>
+
+  <script src="/jas/loc2025/cwa/allcsa.js"></script>
+  <script>
+    (function () {
+      var initialized = false;
+      var queue = [];
+
+      function flush() {
+        if (!initialized || !window.CWASA) return;
+        while (queue.length) {
+          var sigml = queue.shift();
+          try { window.CWASA.playSiGMLText(sigml); } catch (e) { /* keep draining */ }
+        }
+      }
+
+      function doInit() {
+        if (initialized || !window.CWASA) return;
+        try {
+          var avatars = ["luna", "siggi", "anna", "marc", "francoise"];
+          var requested = new URLSearchParams(location.search).get("avatar");
+          var initAv = avatars.indexOf(requested) >= 0 ? requested : "luna";
+          window.CWASA.init({
+            avsbsl: avatars,
+            avSettings: { avList: "avsbsl", initAv: initAv }
+          });
+          initialized = true;
+          parent.postMessage({ type: "s2s-avatar-ready" }, "*");
+          flush();
+        } catch (e) {
+          parent.postMessage({ type: "s2s-avatar-error", message: String(e) }, "*");
+        }
+      }
+
+      function waitForContainer(attempts) {
+        if (document.querySelector(".CWASAAvatar.av0") && window.CWASA) {
+          doInit();
+          return;
+        }
+        if (attempts <= 0) {
+          parent.postMessage({ type: "s2s-avatar-error", message: "CWASA container missing" }, "*");
+          return;
+        }
+        setTimeout(function () { waitForContainer(attempts - 1); }, 300);
+      }
+
+      window.addEventListener("message", function (ev) {
+        var data = ev.data || {};
+        if (data.type === "s2s-play" && typeof data.sigml === "string" && data.sigml.trim()) {
+          queue.push(data.sigml);
+          flush();
+        }
+      });
+
+      // allcsa.js builds the avatar DOM asynchronously after load.
+      setTimeout(function () { waitForContainer(20); }, 300);
+    })();
+  </script>
+</body>
+</html>

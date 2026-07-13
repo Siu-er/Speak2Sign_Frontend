@@ -25,6 +25,13 @@ dist-ssr
 
 public/jas
 public/BSLExamples
+public/test-videos
 
 .idea/
 .next/
+
+# Environment secrets
+.env
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo

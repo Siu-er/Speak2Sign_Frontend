@@ -1,174 +1,110 @@
-'use client'
+"use client";
 
-import React, {useEffect, useState} from 'react';
-import { TranscriptionDisplay } from '@/app/components/TranscriptionDisplay';
-import { GlossDisplay } from '@/app/components/GlossDisplay';
-import { SiGMLDisplay } from '@/app/components/SiGMLDisplay';
-import { Card } from '@/app/components/ui/card';
-import { Accessibility, Zap, Languages, Brain } from 'lucide-react';
-import { VADVoiceRecorder } from "@/app/components/VADVoiceRecorder";
-
-interface VADResult {
-  transcription?: string;
-  gloss?: string;
-  sigml?: string;
-  isNewSegment?: boolean;
-}
-
-interface SentenceSegment {
-  transcription: string;
-  gloss: string;
-  sigml: string;
-}
+import React from "react";
+import Link from "next/link";
+import { Mic, Video, Sparkles } from "lucide-react";
+import { AppShell } from "@/app/components/shell/AppShell";
+import { TopHeader } from "@/app/components/shell/TopHeader";
 
 export default function HomePage() {
-  const [sentences, setSentences] = useState<SentenceSegment[]>([]);
-  const [currentSegment, setCurrentSegment] = useState<Partial<SentenceSegment>>({});
-
-  const handleVADUpdate = async (result: VADResult) => {
-    console.log('VAD update received:', result);
-
-    if (result.transcription) {
-      // New transcription segment started - clear previous and set new
-      setCurrentSegment({
-        transcription: result.transcription
-      });
-    }
-
-    if (result.gloss) {
-      // Gloss received for current segment
-      setCurrentSegment(prev => ({
-        ...prev,
-        gloss: result.gloss
-      }));
-    }
-
-    if (result.sigml && result.isNewSegment) {
-      // Complete segment ready - add to sentences and trigger animation
-      const completeSegment: SentenceSegment = {
-        transcription: currentSegment.transcription || '',
-        gloss: result.gloss || currentSegment.gloss || '',
-        sigml: result.sigml
-      };
-
-      // Add to sentences - don't clear current segment yet
-      // It will be cleared when the next transcription starts
-      setSentences(prev => [...prev, completeSegment]);
-
-      // Trigger animation for this new segment
-      // The SiGML component will auto-play when it receives new content
-    }
-  };
-
-  const handleClearResults = () => {
-    setSentences([]);
-    setCurrentSegment({});
-  };
   return (
-    <div className="min-h-screen bg-gradient-subtle flex flex-col">
-      {/* Header */}
-      <header className="px-6 py-6 flex-shrink-0">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-3">
-              <div className="bg-blue-950 p-2 rounded-full">
-                <Accessibility className="h-6 w-6 text-orange-500" />
-              </div>
-              <h1 className="text-3xl font-bold bg-clip-text text-blue-900">
-                SignBridge AI
-              </h1>
-            </div>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Smart voice detection with real-time sign language translation
-            </p>
-          </div>
+    <AppShell>
+      <TopHeader />
+
+      <main className="px-6 flex-1 flex flex-col pb-6">
+        <div className="animate-fade-up" style={{ animationDelay: "40ms" }}>
+          <p className="s2s-eyebrow mb-3 inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-dot" />
+            Real-time AI translation
+          </p>
+          <h1 className="s2s-heading text-[44px] leading-[1.05] mb-3">
+            How would you like to communicate?
+          </h1>
+          <p className="text-muted-foreground text-[15px] leading-relaxed max-w-[85%]">
+            Choose your communication mode to start transcribing or translating
+            instantly.
+          </p>
         </div>
-      </header>
 
-      {/* Main Content - Two Column Layout */}
-      <main className="px-6 flex-1 flex flex-col">
-        <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
+        <div className="mt-8 space-y-4">
+          <RoleCard
+            href="/pair?role=speaker"
+            icon={<Mic className="w-7 h-7" />}
+            title="I speak"
+            description="Speak and we'll translate sign language"
+            delay={120}
+            surface="primary"
+          />
+          <RoleCard
+            href="/pair?role=signer"
+            icon={<Video className="w-7 h-7" />}
+            title="I sign"
+            description="Sign and we'll convert to text and speech"
+            delay={200}
+            surface="ink"
+          />
+        </div>
 
-          {/* Two Column Content */}
-          <div className="grid lg:grid-cols-2 gap-6 flex-1 min-h-0">
-
-            {/* Left Column - Controls and Text Results */}
-            <div className="space-y-3 overflow-y-auto min-h-0">
-              {/* Voice Recorder */}
-              <VADVoiceRecorder onResult={handleVADUpdate} onClear={handleClearResults} />
-
-              {/* Results Display - Always visible */}
-              <div className="space-y-3">
-                {/* Transcription Display */}
-                <TranscriptionDisplay
-                  transcription={sentences.map(s => s.transcription).join(' ') + (currentSegment.transcription && !sentences.find(s => s.transcription === currentSegment.transcription) ? ` ${currentSegment.transcription}` : '')}
-                  isVisible={true}
-                  language="English"
-                />
-
-                {/* Gloss Display */}
-                <GlossDisplay
-                  glossText={sentences.map(s => s.gloss).join(' ') + (currentSegment.gloss && !sentences.find(s => s.gloss === currentSegment.gloss) ? ` ${currentSegment.gloss}` : '')}
-                  isVisible={true}
-                  originalText={sentences.map(s => s.transcription).join(' ')}
-                />
-              </div>
+        <div className="mt-auto pt-8">
+          <div
+            className="s2s-card flex items-start gap-3 p-4 animate-fade-up"
+            style={{ animationDelay: "320ms" }}
+          >
+            <div className="w-9 h-9 grid place-items-center rounded-2xl bg-primary-soft text-primary">
+              <Sparkles className="w-4 h-4" />
             </div>
-
-            {/* Right Column - Avatar Display */}
-            <div className="flex flex-col min-h-0">
-              <div className="flex-1 flex items-center justify-center">
-                {/* SiGML Display - Always visible */}
-                <div className="w-full h-full">
-                  <SiGMLDisplay
-                    sentences={sentences}
-                    currentSegment={currentSegment}
-                    isVisible={true}
-                  />
-                </div>
-              </div>
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
+                AI is Ready
+                <span className="w-1.5 h-1.5 rounded-full bg-success" />
+              </p>
+              <p className="text-[12px] text-muted-foreground leading-relaxed">
+                Real-time low-latency communication enabled.
+              </p>
             </div>
-
           </div>
-
-          {/* How It Works - Bottom Section */}
-          <div className="mt-4 flex-shrink-0">
-            <Card className="p-4 bg-card/30 backdrop-blur-sm">
-              <h3 className="text-lg font-semibold mb-3 text-center">How It Works</h3>
-              <div className="grid grid-cols-3 gap-6 text-center">
-                <div className="space-y-2">
-                  <div className="bg-primary/10 w-10 h-10 rounded-full flex items-center justify-center mx-auto">
-                    <span className="text-primary font-bold">1</span>
-                  </div>
-                  <h4 className="font-medium">Start VAD</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Click Start and speak naturally - AI detects speech automatically
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="bg-primary/10 w-10 h-10 rounded-full flex items-center justify-center mx-auto">
-                    <span className="text-primary font-bold">2</span>
-                  </div>
-                  <h4 className="font-medium">Real-time Processing</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Speech converts to text, then to ASL gloss notation
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="bg-primary/10 w-10 h-10 rounded-full flex items-center justify-center mx-auto">
-                    <span className="text-primary font-bold">3</span>
-                  </div>
-                  <h4 className="font-medium">Sign Animation</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Watch 3D avatar perform sign language translation
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
-
         </div>
       </main>
-    </div>
+    </AppShell>
+  );
+}
+
+interface RoleCardProps {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  delay: number;
+  surface: "primary" | "ink";
+}
+
+function RoleCard({ href, icon, title, description, delay, surface }: RoleCardProps) {
+  const surfaceCls =
+    surface === "primary" ? "s2s-surface-primary" : "s2s-surface-ink";
+  return (
+    <Link
+      href={href}
+      className="group block animate-fade-up"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div
+        className={`relative overflow-hidden rounded-[28px] px-6 py-7 shadow-pill transition-transform duration-300 group-hover:-translate-y-0.5 group-active:scale-[0.99] ${surfaceCls}`}
+      >
+        <div
+          className="absolute left-1/2 -top-16 w-52 h-52 -translate-x-1/2 rounded-full opacity-25"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 62%)",
+          }}
+        />
+        <div className="relative flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full grid place-items-center bg-white/15 backdrop-blur transition-transform duration-300 group-hover:scale-105">
+            {icon}
+          </div>
+          <h3 className="mt-5 text-2xl font-extrabold tracking-tight">{title}</h3>
+          <p className="mt-1.5 text-sm opacity-80 leading-relaxed max-w-[80%]">{description}</p>
+        </div>
+      </div>
+    </Link>
   );
 }

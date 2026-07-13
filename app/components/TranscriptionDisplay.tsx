@@ -89,7 +89,7 @@ export function TranscriptionDisplay({
         <div className="bg-white/70 backdrop-blur-sm p-3 rounded border border-blue-100">
           {hasContent ? (
             <p className="text-gray-800 text-sm leading-relaxed">
-              "{transcription}"
+              &ldquo;{transcription}&rdquo;
             </p>
           ) : (
             <p className="text-gray-400 text-sm italic text-center">
