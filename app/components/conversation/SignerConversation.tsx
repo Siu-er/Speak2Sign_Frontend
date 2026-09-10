@@ -9,7 +9,7 @@ import { useSettings } from "@/app/hooks/useSettings";
 import { useConversationLog } from "@/app/hooks/useConversationLog";
 import { useSignRecorder } from "@/app/hooks/useSignRecorder";
 import { useHandOverlay } from "@/app/hooks/useHandOverlay";
-import { glossToSigml, textToGloss, SignSequence } from "@/app/lib/pipeline/backend";
+import { glossToSigml, textToGloss } from "@/app/lib/pipeline/backend";
 
 interface SentenceSegment {
   transcription: string;
@@ -27,7 +27,7 @@ export function SignerConversation() {
   const overlayRef = useRef<HTMLCanvasElement>(null);
   useHandOverlay(recorder.videoRef, overlayRef, settings.showLandmarks);
 
-  const [lastResult, setLastResult] = useState<SignSequence | null>(null);
+  const [lastResult, setLastResult] = useState<string | null>(null);
 
   const startCam = recorder.start;
   const stopCam = recorder.stop;
@@ -40,17 +40,16 @@ export function SignerConversation() {
   useEffect(() => { sendRef.current = room.send; }, [room.send]);
 
   const handleRelease = useCallback(async () => {
-    const res = await recorder.finishRecording();
-    if (!res || res.signs.length === 0) return;
-    setLastResult(res);
-    // Send the whole phrase as one batch so the speaker side refines exactly
-    // these glosses into one sentence.
-    const phrase = res.signs.join(" ");
-    sendRef.current("sign", phrase);
-    record("signer", phrase);
+    const result = await recorder.finishRecording();
+    const sentence = result?.sentence;
+    if (!sentence) return;
+    setLastResult(sentence);
+    // The backend already returns a finished English sentence; forward it as-is.
+    sendRef.current("sign", sentence);
+    record("signer", sentence);
   }, [recorder, record]);
 
-  // Desktop: hold Space to record (mirror of holding the button).
+  // Desktop: tap Space to start recording, tap again to stop (frees both hands).
   const recorderRef = useRef(recorder);
   useEffect(() => { recorderRef.current = recorder; });
   const releaseRef = useRef(handleRelease);
@@ -64,22 +63,15 @@ export function SignerConversation() {
       if (e.code !== "Space" || e.repeat || isTyping(e.target)) return;
       e.preventDefault();
       const r = recorderRef.current;
-      if (r.cameraReady && !r.recording && !r.processing) r.beginRecording();
-    };
-    const up = (e: KeyboardEvent) => {
-      if (e.code !== "Space" || isTyping(e.target)) return;
-      e.preventDefault();
-      if (recorderRef.current.recording) releaseRef.current();
+      if (r.processing) return;
+      if (r.recording) releaseRef.current();
+      else if (r.cameraReady) r.beginRecording();
     };
     window.addEventListener("keydown", down);
-    window.addEventListener("keyup", up);
-    return () => {
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
-    };
+    return () => window.removeEventListener("keydown", down);
   }, []);
 
-  // --- Incoming: speech -> avatar ---
+  // Incoming: speech -> avatar
   const [sentences, setSentences] = useState<SentenceSegment[]>([]);
   const [pendingText, setPendingText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -175,17 +167,15 @@ export function SignerConversation() {
         <div className="mt-2 min-h-[1.75rem] text-center">
           {recorder.processing ? (
             <span className="inline-flex items-center gap-2 text-muted-foreground text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" /> Recognizing...
+              <Loader2 className="w-4 h-4 animate-spin" /> Translating...
             </span>
           ) : lastResult ? (
-            <span className="text-sm">
-              <span className="font-display font-extrabold text-primary text-lg">
-                {lastResult.signs.join(" ")}
-              </span>
+            <span className="font-display font-extrabold text-primary text-base leading-snug">
+              {lastResult}
             </span>
           ) : (
             <span className="text-muted-foreground/60 italic text-sm">
-              Your recognized phrase appears here.
+              Your translated sentence appears here.
             </span>
           )}
         </div>
@@ -198,15 +188,16 @@ export function SignerConversation() {
             icon={<Video className="w-7 h-7" />}
             onDown={recorder.beginRecording}
             onUp={handleRelease}
+            toggle
           />
           <p className="text-xs font-semibold text-muted-foreground transition-colors">
             {recorder.processing
-              ? "Recognizing..."
+              ? "Translating..."
               : recorder.recording
-              ? "Release to read"
+              ? "Tap to stop"
               : !recorder.cameraReady
               ? "Starting camera..."
-              : "Hold and sign your phrase"}
+              : "Tap to start, sign, tap to stop"}
           </p>
         </div>
         {recorder.error && <p className="mt-2 text-xs text-destructive">{recorder.error}</p>}

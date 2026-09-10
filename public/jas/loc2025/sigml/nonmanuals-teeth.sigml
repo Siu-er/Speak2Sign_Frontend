@@ -1,0 +1,95 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys facial teeth non-manual.
+Updated 2021-11-27.
+
+Teeth Mouthing D5-1 4.8.2
+=========================
+
+<hamgestural_sign gloss="D01_eee_sss">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="D01"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="D02_f">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="D02"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="D03_ef">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="D03"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="D04_af">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="D04"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="D05_clattering_teeth">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="D05"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="D06_clattering_teeth_with_raised_upper_lip">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="D06"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="D07_one_bite_resulting_in_closed_teeth">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="D07"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="D08">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="D08"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="D09">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="D09"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+</sigml>

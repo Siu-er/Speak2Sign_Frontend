@@ -1,0 +1,119 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys non-facial body non-manual.
+Updated 2004-09-22. Last updated 2021-11-27.
+
+Body
+====
+	RL_rotated_left
+	RR_rotated_right
+	TL_tilted_left
+	TR_tilted_right
+	TF_tilted_forwards
+	TB_tilted_backwards
+	SI_sigh
+	HE_heave
+	ST_straight
+	RD_round
+
+<hamgestural_sign gloss="RL_rotated_left">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="RL"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="RR_rotated_right">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="RR"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TL_tilted_left">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="TL"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TR_tilted_right">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="TR"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TF_tilted_forwards">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="TF"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TB_tilted_backwards">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="TB"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SI_sigh">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="SI"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="HE_heave">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="HE"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="ST_straight">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="ST"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="RD_round">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="RD"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+</sigml>

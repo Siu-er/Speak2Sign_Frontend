@@ -1,0 +1,43 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys facial jaws non-manual.
+Updated 2021-11-27.
+
+Jaws Mouthing D5-1 4.8.2
+========================
+
+<hamgestural_sign gloss="J01_lower_jaw_moves_sideways_left_and_right">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="J01"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="J02">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="J02"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="J03">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="J03"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="J04">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="J04"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+</sigml>

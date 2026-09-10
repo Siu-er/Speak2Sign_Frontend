@@ -1,0 +1,133 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys facial cheeks non-manual.
+Updated 2021-11-27.
+
+Cheeks Mouthing D5-1 4.8.2
+==========================
+
+<hamgestural_sign gloss="C01_puffed_cheeks">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C01"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C02_cheeks_and_lip_area_puffed">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C02"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C03_gradually_puffing_cheeks">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C03"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C04_one_cheek_puffed">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C04"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C05_one_cheek_puffed_while_briefly_blowing_out_air">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C05"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C06_one_cheek_puffed_briefly_blowing_air_cheek_pushed">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C06"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C07_cheeks_sucked_in">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C07"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C08_cheeks_sucked_in_sucking_in_air">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C08"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C09_tongue_pushed_visibly_into_cheek">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C09"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C10_tongue_repeatedly_pushes_into_cheek">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C10"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C11">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C11"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C12">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C12"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="C13">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="C13"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+</hamgestural_sign>
+
+</sigml>

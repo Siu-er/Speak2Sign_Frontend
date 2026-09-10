@@ -30,6 +30,14 @@
       var initialized = false;
       var queue = [];
 
+      // Avatar dimensions are configurable per embed so the same frame serves
+      // the compact conversation view and the full-size kiosk.
+      var q = new URLSearchParams(location.search);
+      var avw = parseInt(q.get("avw"), 10) || 300;
+      var avh = parseInt(q.get("avh"), 10) || 250;
+      var avEl = document.querySelector(".CWASAAvatar.av0");
+      if (avEl) { avEl.style.width = avw + "px"; avEl.style.height = avh + "px"; }
+
       function flush() {
         if (!initialized || !window.CWASA) return;
         while (queue.length) {

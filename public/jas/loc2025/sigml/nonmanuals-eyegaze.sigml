@@ -1,0 +1,151 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys facial eye-gaze non-manual.
+Updated 2021-11-27.
+
+Eye-Gaze D5-1 4.7
+=================
+
+<hamgestural_sign gloss="LE_left">
+  <sign_nonmanual>
+    <eyegaze_tier>
+      <eye_gaze direction="LE"/>
+    </eyegaze_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="RI_right">
+  <sign_nonmanual>
+    <eyegaze_tier>
+      <eye_gaze direction="RI"/>
+    </eyegaze_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="UP_up">
+  <sign_nonmanual>
+    <eyegaze_tier>
+      <eye_gaze direction="UP"/>
+    </eyegaze_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="DN_down">
+  <sign_nonmanual>
+    <eyegaze_tier>
+      <eye_gaze direction="DN"/>
+    </eyegaze_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="RU">
+<sign_nonmanual>
+<eyegaze_tier>
+<eye_gaze direction = "RU"/>
+</eyegaze_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="LU">
+<sign_nonmanual>
+<eyegaze_tier>
+<eye_gaze direction = "LU"/>
+</eyegaze_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="LD">
+<sign_nonmanual>
+<eyegaze_tier>
+<eye_gaze direction = "LD"/>
+</eyegaze_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="RD">
+<sign_nonmanual>
+<eyegaze_tier>
+<eye_gaze direction = "RD"/>
+</eyegaze_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="AD_towards_addressee">
+  <sign_nonmanual>
+    <eyegaze_tier>
+      <eye_gaze direction="AD"/>
+    </eyegaze_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="FR_far">
+  <sign_nonmanual>
+    <eyegaze_tier>
+      <eye_gaze direction="FR"/>
+    </eyegaze_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="HD_towards_the_signer_s_own_hands">
+  <sign_nonmanual>
+    <eyegaze_tier>
+      <eye_gaze direction="HD"/>
+    </eyegaze_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="HI_towards_the_signer_s_own_dominant_hand">
+  <sign_nonmanual>
+    <eyegaze_tier>
+      <eye_gaze direction="HI"/>
+    </eyegaze_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="HC_towards_the_signer_s_own_non_dominant_hand">
+  <sign_nonmanual>
+    <eyegaze_tier>
+      <eye_gaze direction="HC"/>
+    </eyegaze_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="NO_no_target_unfocussed">
+  <sign_nonmanual>
+    <eyegaze_tier>
+      <eye_gaze direction="NO"/>
+    </eyegaze_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="RO_rolling_eyes">
+  <sign_nonmanual>
+    <eyegaze_tier>
+      <eye_gaze direction="RO"/>
+    </eyegaze_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+</sigml>

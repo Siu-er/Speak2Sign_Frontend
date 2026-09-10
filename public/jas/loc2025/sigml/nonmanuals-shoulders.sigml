@@ -1,0 +1,108 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys non-facial shoulders non-manual.
+Updated 2004-09-22. Last updated 2021-11-27.
+
+Shoulders
+=========
+	UL_left_shoulder_raised
+	UR_right_shoulder_raised
+	UB_both_shoulders_raised
+	HL_left_shoulder_hunched_forward
+	HR_right_shoulder_hunched_forward
+	HB_both_shoulders_hunched_forward
+	SL_left_shoulder_shrugging_up_and_down
+	SR_right_shoulder_shrugging_up_and_down
+	SB_both_shoulders_shrugging_up_and_down
+
+<hamgestural_sign gloss="UL_left_shoulder_raised">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="UL"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="UR_right_shoulder_raised">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="UR"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="UB_both_shoulders_raised">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="UB"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="HL_left_shoulder_hunched_forward">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="HL"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="HR_right_shoulder_hunched_forward">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="HR"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="HB_both_shoulders_hunched_forward">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="HB"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SL_left_shoulder_shrugging_up_and_down">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="SL"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SR_right_shoulder_shrugging_up_and_down">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="SR"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SB_both_shoulders_shrugging_up_and_down">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="SB"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+</sigml>

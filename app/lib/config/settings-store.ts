@@ -4,7 +4,7 @@ import {
   AppSettings,
   DEFAULT_SETTINGS,
   SETTINGS_STORAGE_KEY,
-} from "./settings";
+} from "@/app/lib/config/settings";
 
 // Shared settings singleton so every screen reads and reacts to the same live
 // values, persisted to localStorage.

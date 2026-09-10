@@ -1,0 +1,116 @@
+<sigml>
+
+This file tsts some nonmanual features including extra codes and use of morphs defined directly in the SiGML file.
+
+The movement codes must match the type of movement.
+For example, "RB" is an eye_brows movement so must appear in an eye_brows element as in the example below.
+However, while the tier names must match for correct XML, they do not have to match the movement elements.
+For example, eye_brows are naturally in the facialexpr_tier but body_tier works as in the example below.
+
+<hamgestural_sign gloss="RB both_eyebrows_raised">
+  <sign_nonmanual>
+    <body_tier>
+      <eye_brows movement="RB"/>
+    </body_tier>
+  </sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="rest"/>
+
+<hamgestural_sign gloss="RB as avatar morphs">
+  <sign_nonmanual>
+    <extra_tier>
+      <extra_par>
+        <avatar_morph movement="lbru" amount="1.0" timing="x m t m s l x"/>
+        <avatar_morph movement="rbru" amount="1.0" timing="x m t m s l x"/>
+      </extra_par>
+    </extra_tier>
+  </sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="rest"/>
+
+<hamgestural_sign gloss="Mouthing T08">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T08"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="rest"/>
+
+<hamgestural_sign gloss="Mouthing T08 as avatar morphs">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <avatar_morph movement="th" amount="1" timing="m t - m l"/>
+      <avatar_morph movement="aaa" amount="1" timing="m t - m l"/>
+      <avatar_morph movement="th" amount="1" timing="m t - m l"/>
+      <avatar_morph movement="aaa" amount="1" timing="m t - m l"/>
+      <avatar_morph movement="th" amount="1" timing="m t - m l"/>
+      <avatar_morph movement="aaa" amount="1" timing="m t - m l"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="rest"/>
+
+<hamgestural_sign gloss="Extra PRM">
+  <sign_nonmanual>
+    <extra_tier> 
+      <extra_movement movement="PRM"/>
+    </extra_tier>
+  </sign_nonmanual>
+</hamgestural_sign>
+<hamgestural_sign gloss="rest"/>
+
+<hamgestural_sign gloss="rest"/>
+
+<hamgestural_sign gloss="Extra PRM as avatar morphs">
+  <sign_nonmanual>
+    <extra_tier> 
+      <extra_par>
+        <extra_seq>
+          <avatar_morph movement="HTLF" amount="0.03" timing="m t - f l"/>
+          <avatar_morph movement="HTLF" amount="-0.03" timing="m t - f l"/>
+          <avatar_morph movement="HTLF" amount="0.03" timing="m t - f l"/>
+          <avatar_morph movement="HTLF" amount="-0.03" timing="m t - f l"/>
+          <avatar_morph movement="HTLF" amount="0.03" timing="m t - f l"/>
+          <avatar_morph movement="HTLF" amount="-0.03" timing="m t - f l"/>
+        </extra_seq >
+      <avatar_morph movement="lbrd" amount="1.0" timing="x m t m s l x"/>
+      <avatar_morph movement="rbrd" amount="1.0" timing="x m t m s l x"/>
+      <avatar_morph movement="kiss" amount="1.0" timing="x m t m s l x"/>
+      </extra_par >
+    </extra_tier>
+  </sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="rest"/>
+
+<hamgestural_sign gloss="Extra RHQ">
+  <sign_nonmanual>
+    <extra_tier> 
+      <extra_movement movement="RHQ"/>
+    </extra_tier>
+  </sign_nonmanual>
+</hamgestural_sign>
+<hamgestural_sign gloss="rest"/>
+
+<hamgestural_sign gloss="Extra RHQ as avatar morphs">
+  <sign_nonmanual>
+    <extra_tier> 
+      <extra_par>
+        <avatar_morph movement="HPSF" amount="-0.15" timing="x m t m s l x"/>
+        <avatar_morph movement="lbru" amount="1.0" timing="x m t m s l x"/>
+        <avatar_morph movement="rbru" amount="1.0" timing="x m t m s l x"/>
+        <avatar_morph movement="eywl" timing="x m t m s l x"/>
+        <avatar_morph movement="eywr" timing="x m t m s l x"/>
+      </extra_par>
+    </extra_tier>
+  </sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="rest"/>
+
+</sigml>

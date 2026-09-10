@@ -1,0 +1,385 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys non-facial non-manual.
+Updated 2004-09-22. Last updated 2021-11-27.
+
+Non Facial Index
+================
+
+Shoulders
+---------
+	UL_left_shoulder_raised
+	UR_right_shoulder_raised
+	UB_both_shoulders_raised
+	HL_left_shoulder_hunched_forward
+	HR_right_shoulder_hunched_forward
+	HB_both_shoulders_hunched_forward
+	SL_left_shoulder_shrugging_up_and_down
+	SR_right_shoulder_shrugging_up_and_down
+	SB_both_shoulders_shrugging_up_and_down
+
+Body
+----
+	RL_rotated_left
+	RR_rotated_right
+	TL_tilted_left
+	TR_tilted_right
+	TF_tilted_forwards
+	TB_tilted_backwards
+	SI_sigh
+	HE_heave
+	ST_straight
+	RD_round
+
+Head
+----
+	NO_nodding_up_and_down
+	SH_shaking_left_and_right
+	SR_turned_right
+	SL_turned_left
+	TR_tilted_right
+	TL_tilted_left
+	NF_tilted_forward
+	NB_tilted_back
+	PF_pushed_forward
+	PB_pushed_backward
+	LI_head_movement_linked_to_eye_gaze
+
+Head: Additions to ViSiCAST D5.1
+--------------------------------
+	head_ND
+	head_NU
+
+Shoulders
+=========
+
+<hamgestural_sign gloss="UL_left_shoulder_raised">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="UL"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="UR_right_shoulder_raised">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="UR"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="UB_both_shoulders_raised">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="UB"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="HL_left_shoulder_hunched_forward">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="HL"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="HR_right_shoulder_hunched_forward">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="HR"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="HB_both_shoulders_hunched_forward">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="HB"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SL_left_shoulder_shrugging_up_and_down">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="SL"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SR_right_shoulder_shrugging_up_and_down">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="SR"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SB_both_shoulders_shrugging_up_and_down">
+  <sign_nonmanual>
+    <shoulder_tier>
+      <shoulder_movement movement="SB"/>
+    </shoulder_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+Body
+====
+
+<hamgestural_sign gloss="RL_rotated_left">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="RL"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="RR_rotated_right">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="RR"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TL_tilted_left">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="TL"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TR_tilted_right">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="TR"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TF_tilted_forwards">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="TF"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TB_tilted_backwards">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="TB"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SI_sigh">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="SI"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="HE_heave">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="HE"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="ST_straight">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="ST"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="RD_round">
+  <sign_nonmanual>
+    <body_tier>
+      <body_movement movement="RD"/>
+    </body_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+Head
+====
+
+<hamgestural_sign gloss="NO_nodding_up_and_down">
+  <sign_nonmanual>
+    <head_tier>
+      <head_movement movement="NO"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SH_shaking_left_and_right">
+  <sign_nonmanual>
+    <head_tier>
+      <head_movement movement="SH"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SR_turned_right">
+  <sign_nonmanual>
+    <head_tier>
+      <head_movement movement="SR"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SL_turned_left">
+  <sign_nonmanual>
+    <head_tier>
+      <head_movement movement="SL"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TR_tilted_right">
+  <sign_nonmanual>
+    <head_tier>
+      <head_movement movement="TR"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TL_tilted_left">
+  <sign_nonmanual>
+    <head_tier>
+      <head_movement movement="TL"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="NF_tilted_forward">
+  <sign_nonmanual>
+    <head_tier>
+      <head_movement movement="NF"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="NB_tilted_back">
+  <sign_nonmanual>
+    <head_tier>
+      <head_movement movement="NB"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="PF_pushed_forward">
+  <sign_nonmanual>
+    <head_tier>
+      <head_movement movement="PF"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="PB_pushed_backward">
+  <sign_nonmanual>
+    <head_tier>
+      <head_movement movement="PB"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="LI_head_movement_linked_to_eye_gaze">
+  <sign_nonmanual>
+    <head_tier>
+      <head_movement movement="LI"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+Head: Additions
+===============
+
+<hamgestural_sign gloss="head ND">
+  <sign_nonmanual>
+    <head_tier>
+        <head_movement movement="ND"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual both_hands="true" lr_symm="true">
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="head NU">
+  <sign_nonmanual>
+    <head_tier>
+        <head_movement movement="NU"/>
+    </head_tier>
+  </sign_nonmanual>
+  <sign_manual both_hands="true" lr_symm="true">
+  </sign_manual>
+</hamgestural_sign>
+
+</sigml>

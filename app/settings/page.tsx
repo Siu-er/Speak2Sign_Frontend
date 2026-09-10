@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Globe, Volume2, Type, Contrast, Vibrate, User, ScanLine } from "lucide-react";
+import { Globe, Volume2, Type, Contrast, Vibrate, User } from "lucide-react";
 import { AppShell } from "@/app/components/shell/AppShell";
 import { TopHeader } from "@/app/components/shell/TopHeader";
 import { SectionHeading } from "@/app/components/primitives/SectionHeading";
@@ -117,33 +117,6 @@ export default function SettingsPage() {
                 {t}
               </button>
             ))}
-          </div>
-        </div>
-
-        {/* Recognition */}
-        <div className="mt-4 s2s-card p-5">
-          <SettingHead
-            icon={<ScanLine className="w-4 h-4" />}
-            title="Recognition Sensitivity"
-            description="Higher fires on lower confidence (faster, more false positives). Lower waits for surer signs."
-          />
-          <div className="mt-5">
-            <div className="flex justify-between mb-2">
-              <span className="text-sm font-bold text-foreground">Sensitivity</span>
-              <span className="text-sm font-bold text-primary">{s.recognitionSensitivity}%</span>
-            </div>
-            <Slider
-              value={s.recognitionSensitivity}
-              min={0}
-              max={100}
-              step={1}
-              onChange={(v) => update({ recognitionSensitivity: v })}
-            />
-            <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
-              <span>Careful</span>
-              <span>Balanced</span>
-              <span>Eager</span>
-            </div>
           </div>
         </div>
 

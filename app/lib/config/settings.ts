@@ -23,8 +23,6 @@ export interface AppSettings {
   haptic: boolean;
   recordingHistory: boolean;
   avatar: AvatarId;
-  /** 0..100; higher = fires on lower confidence / sooner. */
-  recognitionSensitivity: number;
   /** Draw a live hand-landmark skeleton over the signer's camera preview. */
   showLandmarks: boolean;
 }
@@ -38,7 +36,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   haptic: false,
   recordingHistory: true,
   avatar: "luna",
-  recognitionSensitivity: 65,
   showLandmarks: false,
 };
 

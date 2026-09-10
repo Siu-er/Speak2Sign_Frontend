@@ -59,43 +59,22 @@ export async function glossToSigml(gloss: string): Promise<SigmlResult> {
   return { sigml: data.sigml, fingerspelled: data.fingerspelled ?? [] };
 }
 
-export async function signToSentence(signs: string[]): Promise<string> {
-  const data = await postJson<{ sentence: string }>("/sign-to-sentence", { signs });
-  return data.sentence;
+export interface RecognitionResult {
+  sentence: string;
+  gloss: string[];
 }
 
-export interface SignSpan {
-  sign: string;
-  confidence: number;
-  /** How many consecutive windows held this sign (run length). */
-  count: number;
-}
-
-export interface SignSequence {
-  signs: string[];
-  detail: SignSpan[];
-}
-
-/** Send one recorded phrase clip holding several signs back to back; the backend
- *  extracts landmarks with the training-matched Holistic pipeline, slides the
- *  isolated-sign recognizer across the clip, and returns the ordered signs. */
-export async function videoToSigns(clip: Blob): Promise<SignSequence> {
+/** Send one recorded clip; the backend segments it and classifies each segment
+ *  against the WLASL sign vocabulary, returning the recognized signs and the
+ *  English sentence the LLM reconstructs from them. */
+export async function recognizeVideo(clip: Blob): Promise<RecognitionResult> {
   const form = new FormData();
   form.append("video", clip, "phrase.webm");
-  const resp = await fetch(`${API_URL}/video-to-signs`, { method: "POST", body: form });
+  const resp = await fetch(`${API_URL}/video-to-sentence`, { method: "POST", body: form });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
-    throw new Error(err.error || `video-to-signs failed: HTTP ${resp.status}`);
+    throw new Error(err.error || `video-to-sentence failed: HTTP ${resp.status}`);
   }
   const data = await resp.json();
-  return {
-    signs: data.signs ?? [],
-    detail: (data.detail ?? []).map(
-      (d: { sign: string; confidence: number; count: number }) => ({
-        sign: d.sign,
-        confidence: d.confidence,
-        count: d.count,
-      }),
-    ),
-  };
+  return { sentence: (data.sentence || "").trim(), gloss: Array.isArray(data.gloss) ? data.gloss : [] };
 }

@@ -13,7 +13,7 @@ import {
   Role,
   RoomJoinedAck,
   TRANSPORT_EVENTS,
-} from "./types";
+} from "@/app/lib/transport/types";
 
 const SOCKET_URL =
   process.env.NEXT_PUBLIC_SOCKET_URL ||

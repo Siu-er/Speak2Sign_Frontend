@@ -1,0 +1,352 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys facial lips non-manual.
+Updated 2021-11-27.
+
+Lips Mouthing D5-1 4.8.2
+========================
+
+<hamgestural_sign gloss="L01_sh">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L01"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L02_prrr">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L02"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L03_pr">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L03"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L04_pursed_lips">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L04"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L05_o_oa_open_o">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L05"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L06_ooo_closed_o">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L06"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L07_oa">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L07"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L08_boam">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L08"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L09_bam">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L09"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L10_boa">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L10"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L11_ba">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L11"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L12_bee">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L12"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L13_pi">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L13"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L14_pch">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L14"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L15_bsss_bee">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L15"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L16_pf">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L16"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L17_p">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L17"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L18_p_p_p">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L18"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L19_phh">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L19"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L20_phh">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L20"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L21_ph">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L21"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L22_ph">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L22"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L23_mmm">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L23"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L24_mmm_while_holding_breath">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L24"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L25_m_m_m">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L25"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L26_one_side_of_upper_lip_raised">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="L26"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L27">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="L27"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L28">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="L28"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L29">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="L29"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L30">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="L30"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L31">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="L31"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L32">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="L32"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L33">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="L33"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L34">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="L34"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="L35">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="L35"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+Mouth Gesture sad
+=================
+
+<hamgestural_sign gloss="sad">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="sad"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+</sigml>

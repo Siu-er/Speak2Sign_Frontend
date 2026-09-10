@@ -9,7 +9,7 @@ import { useRoom } from "@/app/hooks/useRoom";
 import { useSettings } from "@/app/hooks/useSettings";
 import { useConversationLog } from "@/app/hooks/useConversationLog";
 import { languageNeedsTranslation, VoiceTone } from "@/app/lib/config/settings";
-import { audioToText, signToSentence } from "@/app/lib/pipeline/backend";
+import { audioToText } from "@/app/lib/pipeline/backend";
 
 const TONE_PARAMS: Record<VoiceTone, { rate: number; pitch: number }> = {
   Natural: { rate: 1.0, pitch: 1.0 },
@@ -29,7 +29,7 @@ export function SpeakerConversation() {
   useEffect(() => { settingsRef.current = settings; }, [settings]);
   const { record } = useConversationLog();
 
-  // --- Outgoing: speech capture ---
+  // Outgoing: speech capture
   const [phase, setPhase] = useState<Phase>("idle");
   const [transcription, setTranscription] = useState("");
   const [error, setError] = useState("");
@@ -82,7 +82,7 @@ export function SpeakerConversation() {
     }
   }, [phase, capture, room, record]);
 
-  // Desktop: hold Space to record speech (mirror of holding the button).
+  // Desktop: tap Space to start recording, tap again to stop and send.
   const phaseRef = useRef(phase);
   useEffect(() => { phaseRef.current = phase; });
   const beginRef = useRef(beginListening);
@@ -97,27 +97,17 @@ export function SpeakerConversation() {
     const down = (e: KeyboardEvent) => {
       if (e.code !== "Space" || e.repeat || isTyping(e.target)) return;
       e.preventDefault();
-      if (phaseRef.current !== "listening" && phaseRef.current !== "processing") beginRef.current();
-    };
-    const up = (e: KeyboardEvent) => {
-      if (e.code !== "Space" || isTyping(e.target)) return;
-      e.preventDefault();
+      if (phaseRef.current === "processing") return;
       if (phaseRef.current === "listening") finishRef.current();
+      else beginRef.current();
     };
     window.addEventListener("keydown", down);
-    window.addEventListener("keyup", up);
-    return () => {
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
-    };
+    return () => window.removeEventListener("keydown", down);
   }, []);
 
-  // --- Incoming: a signed phrase refined into a sentence + spoken ---
-  // The signer records a whole phrase per hold-release, so each message carries
-  // the full gloss sequence of one sentence. Refine those glosses into natural
-  // English with the LLM and speak it as one utterance.
+  // Incoming: a signed sentence, already translated to English by the backend,
+  // arrives per hold-release. Speak it directly as one utterance.
   const [sentences, setSentences] = useState<string[]>([]);
-  const [current, setCurrent] = useState<string[]>([]);
   const [speakEnabled, setSpeakEnabled] = useState(false);
   const speakRef = useRef(false);
 
@@ -138,35 +128,19 @@ export function SpeakerConversation() {
     synth.speak(utter);
   }, []);
 
-  const [forming, setForming] = useState(false);
-  const finalize = useCallback(async (words: string[]) => {
-    if (!words.length) return;
-    setCurrent(words);
-    setForming(true);
-    try {
-      const sentence = await signToSentence(words);
-      setSentences((prev) => [...prev, sentence]);
-      record("signer", sentence);
-      speak(sentence);
-    } catch {
-      setError("Could not form a sentence from the signs.");
-    } finally {
-      setForming(false);
-      setCurrent([]);
-    }
-  }, [speak, record]);
-
   const onMessage = room.onMessage;
   useEffect(() => {
     const unsubscribe = onMessage((msg) => {
       if (msg.kind !== "sign" || !msg.text?.trim()) return;
-      finalize(msg.text.trim().split(/\s+/));
+      const sentence = msg.text.trim();
+      setSentences((prev) => [...prev, sentence]);
+      record("signer", sentence);
+      speak(sentence);
     }, true);
     return unsubscribe;
-  }, [onMessage, finalize]);
+  }, [onMessage, speak, record]);
 
   const lastSentence = sentences[sentences.length - 1] || "";
-  const building = current.join(" ");
 
   return (
     <div className="flex flex-col gap-3">
@@ -187,23 +161,9 @@ export function SpeakerConversation() {
             )}
           </button>
         </div>
-        {lastSentence || building ? (
-          <>
-            {lastSentence && (
-              <p className="font-display font-extrabold text-foreground text-[24px] leading-[1.2] tracking-tight">
-                {lastSentence}
-              </p>
-            )}
-            {building && (
-              <p className="mt-1 text-muted-foreground text-[15px] italic">
-                {building}
-                <span className="ml-0.5 inline-block w-[2px] h-[1em] bg-primary translate-y-0.5 animate-pulse" />
-              </p>
-            )}
-          </>
-        ) : forming ? (
-          <p className="inline-flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" /> Forming sentence...
+        {lastSentence ? (
+          <p className="font-display font-extrabold text-foreground text-[24px] leading-[1.2] tracking-tight">
+            {lastSentence}
           </p>
         ) : (
           <p className="text-muted-foreground/70 italic">Waiting for the signer...</p>
@@ -274,15 +234,16 @@ export function SpeakerConversation() {
             icon={<Mic className="w-7 h-7" />}
             onDown={beginListening}
             onUp={finishAndSend}
+            toggle
           />
           <p className="text-xs font-semibold text-muted-foreground transition-colors">
             {phase === "processing"
               ? "Transcribing..."
               : phase === "listening"
-              ? "Release to send"
+              ? "Tap to stop and send"
               : phase === "sent"
-              ? "Hold to speak again"
-              : "Hold to speak"}
+              ? "Tap to speak again"
+              : "Tap to speak"}
           </p>
         </div>
 

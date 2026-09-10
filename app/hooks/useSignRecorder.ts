@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SignSequence, videoToSigns } from "@/app/lib/pipeline/backend";
+import { recognizeVideo, RecognitionResult } from "@/app/lib/pipeline/backend";
 
 const MIME =
   [
@@ -20,14 +20,13 @@ export interface UseSignRecorder {
   start: () => void;
   stop: () => void;
   beginRecording: () => void;
-  finishRecording: () => Promise<SignSequence | null>;
+  finishRecording: () => Promise<RecognitionResult | null>;
 }
 
 /**
  * Hold-to-record sign capture: opens the camera for preview, records one clip
- * holding a whole phrase while the user holds, and on release sends it to the
- * backend, which extracts landmarks with the training-matched Holistic pipeline
- * and slides the recognizer across the clip to return the ordered signs.
+ * while the user holds, and on release sends it to the backend, which recognizes
+ * the signed phrase and returns the English sentence.
  */
 export function useSignRecorder(): UseSignRecorder {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -45,7 +44,7 @@ export function useSignRecorder(): UseSignRecorder {
     setError("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480, facingMode: "user" },
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
       });
       streamRef.current = stream;
       if (videoRef.current) {
@@ -78,8 +77,8 @@ export function useSignRecorder(): UseSignRecorder {
     setRecording(true);
   }, [recording]);
 
-  const finishRecording = useCallback((): Promise<SignSequence | null> => {
-    return new Promise((resolve) => {
+  const finishRecording = useCallback((): Promise<RecognitionResult | null> => {
+    return new Promise<RecognitionResult | null>((resolve) => {
       const rec = recorderRef.current;
       if (!rec || rec.state === "inactive") {
         setRecording(false);
@@ -96,7 +95,7 @@ export function useSignRecorder(): UseSignRecorder {
         }
         setProcessing(true);
         try {
-          resolve(await videoToSigns(blob));
+          resolve(await recognizeVideo(blob));
         } catch (e) {
           setError(e instanceof Error ? e.message : "Recognition failed");
           resolve(null);

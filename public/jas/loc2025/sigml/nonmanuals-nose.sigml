@@ -1,0 +1,39 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys facial nose non-manual.
+Updated 2021-11-27.
+
+Nose D5-1 4.7.3
+===============
+
+<hamgestural_sign gloss="WR_wrinkled_nose">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <nose movement="WR"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TW_twitching_nose">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <nose movement="TW"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="WI_widened_nostrils">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <nose movement="WI"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+</sigml>

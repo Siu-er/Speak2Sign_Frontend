@@ -11,20 +11,32 @@ interface HoldButtonProps {
   icon: React.ReactNode;
   onDown: () => void;
   onUp: () => void;
+  /** Tap-to-start / tap-to-stop instead of press-and-hold (frees both hands). */
+  toggle?: boolean;
 }
 
 /**
- * Circular hold-to-record control. Idle shows a soft surface with the mode
- * icon; holding fills it and emits an expanding ring. Pointer up (or leaving
- * the button while held) releases.
+ * Circular record control. Idle shows a soft surface with the mode icon;
+ * recording fills it and emits an expanding ring. In hold mode it records while
+ * held; in toggle mode one tap starts and the next stops.
  */
-export function HoldButton({ recording, processing, disabled, icon, onDown, onUp }: HoldButtonProps) {
+export function HoldButton({ recording, processing, disabled, icon, onDown, onUp, toggle }: HoldButtonProps) {
+  const handlers = toggle
+    ? {
+        onClick: () => {
+          if (recording) onUp();
+          else onDown();
+        },
+      }
+    : {
+        onPointerDown: (e: React.PointerEvent) => { e.preventDefault(); onDown(); },
+        onPointerUp: (e: React.PointerEvent) => { e.preventDefault(); onUp(); },
+        onPointerLeave: () => { if (recording) onUp(); },
+      };
   return (
     <button
       disabled={disabled}
-      onPointerDown={(e) => { e.preventDefault(); onDown(); }}
-      onPointerUp={(e) => { e.preventDefault(); onUp(); }}
-      onPointerLeave={() => { if (recording) onUp(); }}
+      {...handlers}
       onContextMenu={(e) => e.preventDefault()}
       className="relative w-[68px] h-[68px] rounded-full grid place-items-center select-none touch-none outline-none transition-transform duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
       aria-pressed={recording}

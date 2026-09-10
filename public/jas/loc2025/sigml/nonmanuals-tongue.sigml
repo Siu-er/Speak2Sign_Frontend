@@ -1,0 +1,175 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys facial tongue non-manual.
+Updated 2021-11-27.
+
+Tongue Mouthing D5-1 4.8.2
+==========================
+
+<hamgestural_sign gloss="T01_l">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T01"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T02_tip_of_tongue_slightly_protruding">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T02"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T03_l_l_l">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T03"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T04_tongue_sticks_out_briefly">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T04"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T05_a">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T05"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T06_tongue_sticking_out_repeatedly">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T06"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T07_lalala">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T07"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T08_alalal">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T08"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T09_als">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T09"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T10_lf">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T10"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T11_laf">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T11"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T12_tip_of_tongue_touches_one_corner_of_the_mouth">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T12"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T13_tongue_tip_between_lower_lip_lower_teeth_middle_tongue_showing">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T13"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T14_tip_of_tongue_is_protruded_and_moving_sidewards">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T14"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T15_oval_circling_movement_of_tongue_in_open_mouth">
+  <sign_nonmanual>
+    <mouthing_tier>
+      <mouth_gesture movement="T15"/>
+    </mouthing_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T16">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="T16"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="T17">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_gesture movement="T17"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+</sigml>

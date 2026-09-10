@@ -23,7 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-public/jas
 public/BSLExamples
 public/test-videos
 

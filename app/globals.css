@@ -128,6 +128,11 @@
       radial-gradient(at 100% 0%, hsl(232 100% 92% / 0.6) 0px, transparent 60%),
       hsl(var(--background));
   }
+  .s2s-shell-dark {
+    background:
+      radial-gradient(at 50% 0%, hsl(217 60% 22% / 0.6) 0px, transparent 55%),
+      hsl(222 47% 8%);
+  }
   .s2s-card {
     @apply rounded-3xl bg-card text-card-foreground;
     box-shadow: var(--shadow-card);

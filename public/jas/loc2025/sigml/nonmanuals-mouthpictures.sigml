@@ -1,0 +1,242 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys facial mouth-picture non-manual.
+Updated 2021-11-27.
+
+
+Mouth Pictures (SAMPA) D5-1 4.8.1
+=================================
+
+<hamgestural_sign gloss="{aA">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "{aA"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="a:A:">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "a:A:"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="A_u">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "A_u"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="rRV6=6">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "rRV6=6"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="e:i:E:I:">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "e:i:E:I:"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="E_i">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "E_i"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="@h">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "@h"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="o">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "o"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="QUYy2uO">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "QUYy2uO"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="u:3:O:o:2:9:">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "u:3:O:o:2:9:"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="@_UU_@">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "@_UU_@"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="9_y">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "9_y"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="wH">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "wH"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="ee_II_@e_@">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "ee_II_@e_@"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="EIi">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "EIi"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="sz">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "sz"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="tdnlJ">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "tdnlJ"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="kgNCGx">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "kgNCGx"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="pbmB">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "pbmB"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SZt_Sd_Z">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "SZt_Sd_Z"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="fv">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "fv"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TD">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "TD"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="jL">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "jL"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="a_I">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "a_I"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="a_I:">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "a_I:"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="O_I">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "O_I"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="O_I:">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "O_I:"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="a_U">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "a_U"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="a_U:">
+<sign_nonmanual>
+<mouthing_tier>
+<mouth_picture picture = "a_U:"/>
+</mouthing_tier>
+</sign_nonmanual>
+</hamgestural_sign>
+
+</sigml>

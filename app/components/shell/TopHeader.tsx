@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, UserCircle2 } from "lucide-react";
-import { S2SLogo } from "./S2SLogo";
+import { S2SLogo } from "@/app/components/shell/S2SLogo";
 
 interface Props {
   title?: string;

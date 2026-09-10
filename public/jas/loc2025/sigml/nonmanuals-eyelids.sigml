@@ -1,0 +1,139 @@
+<sigml>
+
+This file should contain one sign for every HamNoSys facial eye-lids non-manual.
+Updated 2021-11-27.
+
+Eyelids D5-1 4.7.2
+==================
+
+<hamgestural_sign gloss="WB_wide_open_eyelids">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="WB"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="WR_wide_open_right_eyelid">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="WR"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="WL_wide_open_left_eyelid">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="WL"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SB_narrowed_almost_closed_eyelids_slits">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="SB"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SR_narrowed_almost_closed_right_eyelid">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="SR"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="SL_narrowed_almost_closed_left_eyelid">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="SL"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="CB_closed_eyelids">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="CB"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="CR_closed_right_eyelid">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="CR"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="CL_closed_left_eyelid">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="CL"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TB_tightly_shut_eyelids">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="TB"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TR_tightly_shut_right_eyelid">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="TR"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="TL_tightly_shut_left_eyelid">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="TL"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+<hamgestural_sign gloss="BB_eye_blink_at_the_very_end_of_a_sign">
+  <sign_nonmanual>
+    <facialexpr_tier>
+      <eye_lids movement="BB"/>
+    </facialexpr_tier>
+  </sign_nonmanual>
+  <sign_manual>
+  </sign_manual>
+</hamgestural_sign>
+
+</sigml>
