@@ -1,15 +1,14 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Mic, Loader2, Volume2, VolumeX, Languages } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { Chip } from "@/app/components/primitives/Chip";
 import { HoldButton } from "@/app/components/conversation/HoldButton";
-import { useSpeechCapture } from "@/app/hooks/useSpeechCapture";
 import { useRoom } from "@/app/hooks/useRoom";
 import { useSettings } from "@/app/hooks/useSettings";
 import { useConversationLog } from "@/app/hooks/useConversationLog";
-import { languageNeedsTranslation, VoiceTone } from "@/app/lib/config/settings";
-import { audioToText } from "@/app/lib/pipeline/backend";
+import { useLiveSpeech } from "@/app/hooks/useLiveSpeech";
+import { VoiceTone } from "@/app/lib/config/settings";
 
 const TONE_PARAMS: Record<VoiceTone, { rate: number; pitch: number }> = {
   Natural: { rate: 1.0, pitch: 1.0 },
@@ -18,77 +17,32 @@ const TONE_PARAMS: Record<VoiceTone, { rate: number; pitch: number }> = {
   Robotic: { rate: 0.85, pitch: 0.6 },
 };
 
-type Phase = "idle" | "listening" | "processing" | "sent";
-
-/** Speaker device: holds to record speech, receives signs as text + TTS. */
+/** Speaker device: tap to start/stop live speech; browser STT sends each phrase. */
 export function SpeakerConversation() {
-  const capture = useSpeechCapture();
   const room = useRoom();
   const { settings } = useSettings();
   const settingsRef = useRef(settings);
   useEffect(() => { settingsRef.current = settings; }, [settings]);
   const { record } = useConversationLog();
 
-  // Outgoing: speech capture
-  const [phase, setPhase] = useState<Phase>("idle");
   const [transcription, setTranscription] = useState("");
-  const [error, setError] = useState("");
-  // When on, Whisper translates any spoken language to English. Default from the
-  // chosen language in Settings.
-  const [translateMode, setTranslateMode] = useState(() =>
-    languageNeedsTranslation(settings.language),
-  );
-  const translateRef = useRef(false);
-  useEffect(() => { translateRef.current = translateMode; }, [translateMode]);
+  const [speakEnabled, setSpeakEnabled] = useState(false);
+  const speakRef = useRef(false);
 
-  // Open the mic on mount so the level meter is live before recording.
-  const startMic = capture.start;
-  const stopMic = capture.stop;
-  useEffect(() => {
-    startMic();
-    return () => stopMic();
-  }, [startMic, stopMic]);
+  const [sentences, setSentences] = useState<string[]>([]);
 
-  const beginListening = useCallback(() => {
-    setError("");
-    setTranscription("");
-    setPhase("listening");
-    capture.beginRecording();
-  }, [capture]);
+  const sendRef = useRef(room.send);
+  useEffect(() => { sendRef.current = room.send; }, [room.send]);
 
-  const finishAndSend = useCallback(async () => {
-    if (phase !== "listening") return;
-    const result = capture.finishRecording();
-    if (!result) {
-      setError("No audio captured.");
-      setPhase("idle");
-      return;
-    }
-    setPhase("processing");
-    try {
-      const text = await audioToText(result.wav, { translate: translateRef.current });
-      if (!text) {
-        setError("No speech detected.");
-        setPhase("idle");
-        return;
-      }
-      setTranscription(text);
-      room.send("speech", text);
-      record("speaker", text);
-      setPhase("sent");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Transcription failed");
-      setPhase("idle");
-    }
-  }, [phase, capture, room, record]);
+  const onFinal = useCallback((text: string) => {
+    setTranscription(text);
+    sendRef.current("speech", text);
+    record("speaker", text);
+  }, [record]);
 
-  // Desktop: tap Space to start recording, tap again to stop and send.
-  const phaseRef = useRef(phase);
-  useEffect(() => { phaseRef.current = phase; });
-  const beginRef = useRef(beginListening);
-  useEffect(() => { beginRef.current = beginListening; });
-  const finishRef = useRef(finishAndSend);
-  useEffect(() => { finishRef.current = finishAndSend; });
+  const { listening, interim, supported, start, stop } = useLiveSpeech({ onFinal });
+
+  // Spacebar toggle
   useEffect(() => {
     const isTyping = (el: EventTarget | null) => {
       const n = el as HTMLElement | null;
@@ -97,19 +51,11 @@ export function SpeakerConversation() {
     const down = (e: KeyboardEvent) => {
       if (e.code !== "Space" || e.repeat || isTyping(e.target)) return;
       e.preventDefault();
-      if (phaseRef.current === "processing") return;
-      if (phaseRef.current === "listening") finishRef.current();
-      else beginRef.current();
+      if (listening) stop(); else start();
     };
     window.addEventListener("keydown", down);
     return () => window.removeEventListener("keydown", down);
-  }, []);
-
-  // Incoming: a signed sentence, already translated to English by the backend,
-  // arrives per hold-release. Speak it directly as one utterance.
-  const [sentences, setSentences] = useState<string[]>([]);
-  const [speakEnabled, setSpeakEnabled] = useState(false);
-  const speakRef = useRef(false);
+  }, [listening, start, stop]);
 
   useEffect(() => {
     speakRef.current = speakEnabled;
@@ -147,24 +93,13 @@ export function SpeakerConversation() {
       {/* Incoming signs */}
       <div className="s2s-card p-4 min-h-[6.5rem]">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-            Signer says
-          </p>
-          <button
-            onClick={() => setSpeakEnabled((v) => !v)}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
-          >
-            {speakEnabled ? (
-              <><Volume2 className="w-4 h-4" /> Voice on</>
-            ) : (
-              <><VolumeX className="w-4 h-4" /> Muted</>
-            )}
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Signer says</p>
+          <button onClick={() => setSpeakEnabled((v) => !v)} className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+            {speakEnabled ? <><Volume2 className="w-4 h-4" /> Voice on</> : <><VolumeX className="w-4 h-4" /> Muted</>}
           </button>
         </div>
         {lastSentence ? (
-          <p className="font-display font-extrabold text-foreground text-[24px] leading-[1.2] tracking-tight">
-            {lastSentence}
-          </p>
+          <p className="font-display font-extrabold text-foreground text-[24px] leading-[1.2] tracking-tight">{lastSentence}</p>
         ) : (
           <p className="text-muted-foreground/70 italic">Waiting for the signer...</p>
         )}
@@ -173,83 +108,45 @@ export function SpeakerConversation() {
       {/* Outgoing speech */}
       <div className="s2s-card p-4">
         <div className="flex items-center justify-between mb-3">
-          <button
-            onClick={() => setTranslateMode((v) => !v)}
-            className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground hover:text-primary"
-            title="Toggle spoken language"
-          >
-            <Languages className="w-3.5 h-3.5" />
-            {translateMode ? "Any language" : "English"}
-          </button>
-          {phase === "sent" ? (
-            <Chip tone="success" size="sm" className="gap-1.5">Sent</Chip>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">You speak</p>
+          {listening ? (
+            <Chip tone="amber" size="sm" className="gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-recording animate-pulse" /> Listening
+            </Chip>
           ) : (
-            <Chip tone={phase === "listening" ? "amber" : "success"} size="sm" className="gap-1.5">
-              <span className={`w-1.5 h-1.5 rounded-full ${phase === "listening" ? "bg-recording animate-pulse" : "bg-emerald-500"}`} />
-              {phase === "listening" ? "Recording" : "Mic ready"}
+            <Chip tone="success" size="sm" className="gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Mic ready
             </Chip>
           )}
         </div>
 
-        <div className="flex items-end justify-center gap-1.5 h-11 mb-2">
-          {capture.bands.map((v, i) => {
-            const h = capture.isActive ? Math.max(0.06, v) : 0.06;
-            const hot = phase === "listening";
-            return (
-              <span
-                key={i}
-                className={`w-1.5 rounded-full transition-all ${hot ? "bg-gradient-to-b from-recording to-primary" : "bg-gradient-to-b from-primary-bright to-primary"}`}
-                style={{ height: `${h * 100}%`, opacity: 0.4 + h * 0.6, transitionDuration: "90ms" }}
-              />
-            );
-          })}
-        </div>
-        <div className="h-1.5 rounded-full bg-secondary overflow-hidden mb-3">
-          <div
-            className="h-full bg-primary rounded-full transition-all"
-            style={{ width: `${Math.min(100, Math.round(capture.level * 240))}%`, transitionDuration: "90ms" }}
-          />
-        </div>
-
         <div className="min-h-[2rem] mb-3 text-center">
-          {phase === "processing" ? (
-            <span className="inline-flex items-center gap-2 text-muted-foreground text-[15px]">
-              <Loader2 className="w-4 h-4 animate-spin" /> Transcribing...
-            </span>
+          {interim ? (
+            <span className="text-primary/70 text-[15px] italic">{interim}</span>
           ) : transcription ? (
-            <span className="text-foreground text-[15px] font-medium animate-fade-up">
-              &ldquo;{transcription}&rdquo;
-            </span>
+            <span className="text-foreground text-[15px] font-medium animate-fade-up">&ldquo;{transcription}&rdquo;</span>
           ) : (
-            <span className="text-muted-foreground/60 italic text-[15px]">
-              Your transcription appears here.
-            </span>
+            <span className="text-muted-foreground/60 italic text-[15px]">Your transcription appears here.</span>
           )}
         </div>
 
+        {!supported && (
+          <p className="text-center text-xs text-destructive mb-2">Live speech not supported in this browser. Use Chrome.</p>
+        )}
+
         <div className="flex flex-col items-center gap-1.5">
           <HoldButton
-            recording={phase === "listening"}
-            processing={phase === "processing"}
-            icon={<Mic className="w-7 h-7" />}
-            onDown={beginListening}
-            onUp={finishAndSend}
+            recording={listening}
+            processing={false}
+            icon={listening ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
+            onDown={listening ? stop : start}
+            onUp={() => {}}
             toggle
           />
-          <p className="text-xs font-semibold text-muted-foreground transition-colors">
-            {phase === "processing"
-              ? "Transcribing..."
-              : phase === "listening"
-              ? "Tap to stop and send"
-              : phase === "sent"
-              ? "Tap to speak again"
-              : "Tap to speak"}
+          <p className="text-xs font-semibold text-muted-foreground">
+            {listening ? "Tap to stop" : "Tap to speak"}
           </p>
         </div>
-
-        {(error || capture.error) && (
-          <p className="mt-3 text-center text-xs text-destructive">{error || capture.error}</p>
-        )}
       </div>
     </div>
   );
