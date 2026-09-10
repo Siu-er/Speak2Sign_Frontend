@@ -52,9 +52,12 @@
           var avatars = ["luna", "siggi", "anna", "marc", "francoise"];
           var requested = new URLSearchParams(location.search).get("avatar");
           var initAv = avatars.indexOf(requested) >= 0 ? requested : "luna";
+          var jasBase = "https://pub-233bfe19474b4be58fb4a245b6800823.r2.dev/jas/loc2025/";
           window.CWASA.init({
             avsbsl: avatars,
-            avSettings: { avList: "avsbsl", initAv: initAv }
+            avSettings: { avList: "avsbsl", initAv: initAv },
+            jasBase: jasBase,
+            cwaBase: jasBase + "cwa/"
           });
           initialized = true;
           parent.postMessage({ type: "s2s-avatar-ready" }, "*");
