@@ -29,6 +29,7 @@ public/test-videos
 
 .idea/
 .next/
+.wrangler/
 
 # Environment secrets
 .env
