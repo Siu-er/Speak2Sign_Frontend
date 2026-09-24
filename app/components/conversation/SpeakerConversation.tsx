@@ -139,8 +139,8 @@ export function SpeakerConversation() {
             recording={listening}
             processing={false}
             icon={listening ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
-            onDown={listening ? stop : start}
-            onUp={() => {}}
+            onDown={start}
+            onUp={stop}
             toggle
           />
           <p className="text-xs font-semibold text-muted-foreground">
