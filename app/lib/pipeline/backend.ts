@@ -20,24 +20,11 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return resp.json();
 }
 
-export async function audioToText(
-  wav: Blob,
-  opts: { translate?: boolean } = {},
-): Promise<string> {
-  const form = new FormData();
-  form.append("audio", wav, "segment.wav");
-  // translate => Whisper outputs English from any spoken language.
-  form.append("task", opts.translate ? "translate" : "transcribe");
-  const resp = await fetch(`${API_URL}/audio-to-text`, {
-    method: "POST",
-    body: form,
-  });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(err.error || `audio-to-text failed: HTTP ${resp.status}`);
-  }
-  const data = await resp.json();
-  return (data.text || "").trim();
+/** Translate an utterance recognized in another language into English, which is
+ *  what the gloss stage accepts. */
+export async function translateToEnglish(text: string): Promise<string> {
+  const data = await postJson<{ text: string }>("/translate-to-english", { text });
+  return data.text.trim();
 }
 
 export async function textToGloss(text: string): Promise<string> {

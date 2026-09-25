@@ -1,22 +1,25 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Send, Globe } from "lucide-react";
+import React, { useCallback, useRef, useState } from "react";
+import { Mic, MicOff, Send, Globe, TriangleAlert } from "lucide-react";
 import { PageShell } from "@/app/components/shell/PageShell";
 import { LiveAvatar, AvatarClip } from "@/app/components/live/LiveAvatar";
 import { useLiveSpeech } from "@/app/hooks/useLiveSpeech";
-import { useSpeechCapture } from "@/app/hooks/useSpeechCapture";
-import { textToGloss, glossToSigml, audioToText } from "@/app/lib/pipeline/backend";
+import { textToGloss, glossToSigml, translateToEnglish } from "@/app/lib/pipeline/backend";
+import { SPEECH_LANGUAGES, DEFAULT_SPEECH_LANG } from "@/app/lib/config/languages";
 
 const PHRASES = ["Hello, nice to meet you", "Thank you", "How are you?", "I need help", "Please wait", "Goodbye"];
 
 export default function LivePage() {
   const [clips, setClips] = useState<AvatarClip[]>([]);
   const [captions, setCaptions] = useState<string[]>([]);
+  const [source, setSource] = useState("");
   const [spelled, setSpelled] = useState<string[]>([]);
+  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [text, setText] = useState("");
   const [name, setName] = useState("");
+  const [lang, setLang] = useState<string>(DEFAULT_SPEECH_LANG);
 
   const queueRef = useRef<Promise<void>>(Promise.resolve());
   const idRef = useRef(0);
@@ -25,6 +28,7 @@ export default function LivePage() {
     const phrase = raw.trim();
     if (!phrase) return;
     setCaptions((prev) => [...prev.slice(-3), phrase]);
+    setError("");
     setBusy(true);
     queueRef.current = queueRef.current
       .then(async () => {
@@ -33,34 +37,32 @@ export default function LivePage() {
         if (sigml?.trim()) setClips((prev) => [...prev, { id: idRef.current++, sigml }]);
         setSpelled(fingerspelled.map((w) => w.replace(/^FS-/, "")));
       })
-      .catch(() => { /* keep the kiosk alive */ })
+      .catch((e: Error) => setError(e.message))
       .finally(() => setBusy(false));
   }, []);
 
-  const { listening, interim, supported, start, stop } = useLiveSpeech({ onFinal: signText });
+  const onFinal = useCallback((raw: string) => {
+    const phrase = raw.trim();
+    if (!phrase) return;
+    if (lang === DEFAULT_SPEECH_LANG) {
+      setSource("");
+      signText(phrase);
+      return;
+    }
+    setSource(phrase);
+    setError("");
+    setBusy(true);
+    queueRef.current = queueRef.current
+      .then(() => translateToEnglish(phrase))
+      .then((english) => signText(english))
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setBusy(false));
+  }, [lang, signText]);
 
-  const [translateMode, setTranslateMode] = useState(false);
-  const capture = useSpeechCapture();
-  const captureStart = capture.start;
-  const captureStop = capture.stop;
-  useEffect(() => {
-    if (translateMode) { if (listening) stop(); captureStart(); }
-    else captureStop();
-  }, [translateMode, captureStart, captureStop, listening, stop]);
+  const { listening, interim, supported, start, stop } = useLiveSpeech({ onFinal, lang });
 
-  const holdStart = useCallback(() => { if (translateMode) capture.beginRecording(); }, [translateMode, capture]);
-  const holdEnd = useCallback(async () => {
-    if (!translateMode) return;
-    const res = capture.finishRecording();
-    if (!res) return;
-    try {
-      const t = await audioToText(res.wav, { translate: true });
-      if (t) signText(t);
-    } catch { /* keep alive */ }
-  }, [translateMode, capture, signText]);
-
-  const submitText = (e: React.FormEvent) => { e.preventDefault(); signText(text); setText(""); };
-  const submitName = (e: React.FormEvent) => { e.preventDefault(); if (name.trim()) signText(name.trim()); };
+  const submitText = (e: React.FormEvent) => { e.preventDefault(); setSource(""); signText(text); setText(""); };
+  const submitName = (e: React.FormEvent) => { e.preventDefault(); if (name.trim()) { setSource(""); signText(name.trim()); } };
 
   return (
     <PageShell title="Live Sign" eyebrow="Say it, see it signed" className="gap-3">
@@ -76,6 +78,14 @@ export default function LivePage() {
             <span className="text-muted-foreground/60 italic text-sm">Tap the mic, type, or pick a phrase.</span>
           )}
         </div>
+        {source && (
+          <p className="mt-0.5 text-center text-[12px] text-muted-foreground/80">heard: {source}</p>
+        )}
+        {error && (
+          <p className="mt-1 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-destructive">
+            <TriangleAlert className="w-3.5 h-3.5 shrink-0" /> {error}
+          </p>
+        )}
         {spelled.length > 0 && (
           <div className="mt-1 flex flex-wrap justify-center gap-1.5">
             {spelled.map((w, i) => (
@@ -88,21 +98,23 @@ export default function LivePage() {
       {/* controls */}
       <div className="space-y-2.5">
         <div className="flex justify-center">
-          <div className="inline-flex rounded-full bg-white/80 border border-primary/10 p-0.5 shadow-pill-soft text-[13px] font-semibold">
-            <button onClick={() => setTranslateMode(false)} className={`px-3 py-1 rounded-full transition-colors ${!translateMode ? "bg-primary text-white" : "text-muted-foreground"}`}>English</button>
-            <button onClick={() => setTranslateMode(true)} className={`px-3 py-1 rounded-full inline-flex items-center gap-1.5 transition-colors ${translateMode ? "bg-primary text-white" : "text-muted-foreground"}`}>
-              <Globe className="w-3.5 h-3.5" /> Any language
-            </button>
-          </div>
+          <label className="inline-flex items-center gap-2 rounded-full bg-white/80 border border-primary/10 pl-3 pr-2 py-1 shadow-pill-soft text-[13px] font-semibold text-foreground">
+            <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
+            <span className="sr-only">Spoken language</span>
+            <select
+              value={lang}
+              onChange={(e) => { if (listening) stop(); setLang(e.target.value); setSource(""); }}
+              className="bg-transparent outline-none font-semibold text-[13px] pr-1 cursor-pointer"
+            >
+              {SPEECH_LANGUAGES.map((l) => (
+                <option key={l.tag} value={l.tag}>{l.label}</option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <div className="flex items-center gap-2.5">
-          {translateMode ? (
-            <button onPointerDown={holdStart} onPointerUp={holdEnd} onPointerLeave={holdEnd} title="Hold and speak any language"
-              className="shrink-0 w-14 h-14 rounded-full grid place-items-center text-white shadow-pill bg-primary active:scale-95 select-none touch-none">
-              <Globe className="w-6 h-6" />
-            </button>
-          ) : supported && (
+          {supported && (
             <button onClick={listening ? stop : start} title={listening ? "Stop" : "Speak"}
               className={`shrink-0 w-14 h-14 rounded-full grid place-items-center text-white shadow-pill transition-transform active:scale-95 ${listening ? "bg-recording animate-pulse" : "bg-primary"}`}>
               {listening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
@@ -118,7 +130,7 @@ export default function LivePage() {
 
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {PHRASES.map((p) => (
-            <button key={p} onClick={() => signText(p)} className="shrink-0 px-3.5 py-1.5 rounded-full bg-white/80 border border-primary/10 text-[13px] font-semibold text-foreground shadow-pill-soft hover:border-primary/40 hover:text-primary transition-colors whitespace-nowrap">{p}</button>
+            <button key={p} onClick={() => { setSource(""); signText(p); }} className="shrink-0 px-3.5 py-1.5 rounded-full bg-white/80 border border-primary/10 text-[13px] font-semibold text-foreground shadow-pill-soft hover:border-primary/40 hover:text-primary transition-colors whitespace-nowrap">{p}</button>
           ))}
         </div>
 
