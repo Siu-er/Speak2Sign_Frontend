@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Video, Loader2, RotateCcw, Check, X, Trophy } from "lucide-react";
+import { Video, Loader2, RotateCcw, Check, X, Trophy, TriangleAlert } from "lucide-react";
 import { PageShell } from "@/app/components/shell/PageShell";
-import { LiveAvatar, AvatarClip } from "@/app/components/live/LiveAvatar";
+import { SignAvatar, AvatarClip } from "@/app/components/avatar/SignAvatar";
+import { Celebration } from "@/app/components/primitives/Celebration";
 import { useSignRecorder } from "@/app/hooks/useSignRecorder";
 import { useHandOverlay } from "@/app/hooks/useHandOverlay";
-import { textToGloss, glossToSigml } from "@/app/lib/pipeline/backend";
+import { textToSign } from "@/app/lib/pipeline/backend";
 
 const WORDS = ["sign", "people", "talk", "deaf", "learn", "name", "help", "work", "good", "happy", "book", "school", "friend", "family"];
 
@@ -24,6 +25,7 @@ export default function PracticePage() {
   const [correct, setCorrect] = useState(false);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [demoError, setDemoError] = useState("");
   const idRef = useRef(0);
 
   const startCam = recorder.start;
@@ -31,11 +33,14 @@ export default function PracticePage() {
   useEffect(() => { startCam(); return () => stopCam(); }, [startCam, stopCam]);
 
   const demo = useCallback(async (word: string) => {
+    setDemoError("");
     try {
-      const gloss = await textToGloss(word);
-      const { sigml } = await glossToSigml(gloss);
-      if (sigml?.trim()) setClips((prev) => [...prev, { id: idRef.current++, sigml }]);
-    } catch { /* best-effort demo */ }
+      const { sigml, nonManual } = await textToSign(word);
+      if (!sigml.trim()) throw new Error(`No sign was produced for "${word}".`);
+      setClips((prev) => [...prev, { id: idRef.current++, sigml, nonManual }]);
+    } catch (e) {
+      setDemoError(e instanceof Error ? e.message : String(e));
+    }
   }, []);
 
   useEffect(() => { demo(target); }, [target, demo]);
@@ -72,18 +77,19 @@ export default function PracticePage() {
   );
 
   return (
-    <PageShell title="Practice" eyebrow="Copy the sign" action={scoreChip} className="gap-3 items-center">
+    <PageShell title="Practice" subtitle="Copy the sign" action={scoreChip} className="gap-3 items-center">
       {/* target */}
       <div className="text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Sign this word</p>
+        <p className="s2s-label text-muted-foreground">Sign this word</p>
         <p className="font-display font-extrabold text-[34px] text-primary capitalize leading-tight">{target}</p>
-        {streak >= 2 && <p className="text-[11px] font-bold text-amber-600">{streak} in a row</p>}
+        {streak >= 2 && <p className="text-[12px] font-bold text-amber-600">{streak} in a row</p>}
+        {demoError && <p className="mt-1 inline-flex items-center gap-1.5 text-[12px] font-semibold text-destructive"><TriangleAlert className="w-3.5 h-3.5" /> {demoError}</p>}
       </div>
 
       {/* stage */}
-      <div className="relative w-full flex-1 min-h-0 rounded-[26px] overflow-hidden shadow-card bg-ink border border-white/10">
+      <div className={`relative w-full flex-1 min-h-[340px] rounded-[28px] overflow-hidden shadow-lift ${phase === "watch" ? "" : "bg-ink"}`}>
         <div className={`absolute inset-0 transition-opacity duration-300 ${phase === "watch" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-          <LiveAvatar clips={clips} className="w-full h-full bg-gradient-to-b from-slate-100 to-slate-200/70" />
+          <SignAvatar clips={clips} variant="stage" showGlosses className="w-full h-full rounded-none" />
         </div>
         <div className={`absolute inset-0 transition-opacity duration-300 ${phase !== "watch" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
           <video ref={recorder.videoRef} className="absolute inset-0 w-full h-full object-cover" autoPlay playsInline muted style={{ transform: "scaleX(-1)" }} />
@@ -96,6 +102,7 @@ export default function PracticePage() {
         </div>
         {phase === "result" && (
           <div className={`absolute inset-0 grid place-items-center backdrop-blur-sm ${correct ? "bg-emerald-500/30" : "bg-ink/45"}`}>
+            {correct && <Celebration />}
             <div className="text-center animate-fade-up px-6">
               <div className={`w-20 h-20 rounded-full grid place-items-center mx-auto shadow-pill ${correct ? "bg-emerald-500" : "bg-white/90"}`}>
                 {correct ? <Check className="w-10 h-10 text-white" /> : <X className="w-10 h-10 text-recording" />}

@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PhoneOff } from "lucide-react";
+import { PhoneOff, Link2 } from "lucide-react";
 import { AppShell } from "@/app/components/shell/AppShell";
+import { PageHeader } from "@/app/components/shell/PageHeader";
 import { Chip } from "@/app/components/primitives/Chip";
 import { Pill } from "@/app/components/primitives/Pill";
 import { SpeakerConversation } from "@/app/components/conversation/SpeakerConversation";
@@ -40,14 +41,21 @@ export default function ConversationPage() {
   if (!paired) {
     return (
       <AppShell showNav={false}>
-        <main className="flex-1 px-6 flex flex-col items-center justify-center text-center gap-5">
-          <p className="s2s-heading text-2xl">Not in a conversation</p>
-          <p className="text-muted-foreground text-sm max-w-[80%]">
-            {joinError || "Pair with the other device to begin."}
+        <PageHeader backHref="/" />
+        <main className="flex-1 px-6 pb-10 flex flex-col items-center justify-center text-center">
+          <div className="w-20 h-20 rounded-full p-[3px] s2s-ribbon">
+            <div className="w-full h-full rounded-full bg-white grid place-items-center text-primary">
+              <Link2 className="w-9 h-9" />
+            </div>
+          </div>
+          <h1 className="mt-6 s2s-heading text-[28px] leading-tight">Not connected yet</h1>
+          <p className={`mt-2 text-[15px] max-w-[30ch] ${joinError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+            {joinError || "A conversation starts when two devices pair. Choose how you take part."}
           </p>
-          <Pill variant="primary" size="lg" onClick={() => router.push("/")}>
-            Go to pairing
-          </Pill>
+          <div className="mt-7 grid grid-cols-2 gap-3 w-full">
+            <Pill variant="primary" size="lg" onClick={() => router.push("/pair?role=speaker")}>I speak</Pill>
+            <Pill variant="soft" size="lg" onClick={() => router.push("/pair?role=signer")}>I sign</Pill>
+          </div>
         </main>
       </AppShell>
     );

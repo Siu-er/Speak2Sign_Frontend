@@ -2,6 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+const SPEECH_ERRORS: Record<string, string> = {
+  "not-allowed": "Microphone access is blocked. Allow it in the browser's site settings.",
+  "service-not-allowed": "This browser does not allow speech recognition here.",
+  "audio-capture": "No microphone was found.",
+  network: "Speech recognition needs a network connection.",
+  "language-not-supported": "This language is not available for speech recognition.",
+};
+
 interface Options {
   onFinal: (text: string) => void;
   lang?: string;
@@ -16,6 +24,7 @@ export function useLiveSpeech({ onFinal, lang = "en-US" }: Options) {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
   const [supported, setSupported] = useState(true);
+  const [error, setError] = useState("");
   const recRef = useRef<any>(null);
   const wantOnRef = useRef(false);
   const onFinalRef = useRef(onFinal);
@@ -46,7 +55,13 @@ export function useLiveSpeech({ onFinal, lang = "en-US" }: Options) {
       if (wantOnRef.current) { try { rec.start(); } catch { /* already starting */ } }
       else setListening(false);
     };
-    rec.onerror = () => { /* transient; onend handles restart */ };
+    rec.onerror = (e: any) => {
+      // "no-speech" and "aborted" are routine pauses that onend restarts from;
+      // anything else means listening cannot continue, so it stops and says why.
+      if (e.error === "no-speech" || e.error === "aborted") return;
+      wantOnRef.current = false;
+      setError(SPEECH_ERRORS[e.error] ?? `Speech recognition stopped (${e.error}).`);
+    };
     recRef.current = rec;
     return () => { wantOnRef.current = false; try { rec.stop(); } catch { /* not started */ } };
   }, [lang]);
@@ -54,6 +69,7 @@ export function useLiveSpeech({ onFinal, lang = "en-US" }: Options) {
   const start = useCallback(() => {
     if (!recRef.current) return;
     wantOnRef.current = true;
+    setError("");
     try { recRef.current.start(); setListening(true); } catch { /* already running */ }
   }, []);
 
@@ -64,5 +80,5 @@ export function useLiveSpeech({ onFinal, lang = "en-US" }: Options) {
     setListening(false);
   }, []);
 
-  return { listening, interim, supported, start, stop };
+  return { listening, interim, supported, error, start, stop };
 }

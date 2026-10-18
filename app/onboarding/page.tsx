@@ -1,124 +1,97 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Heart, Sparkles, Users } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { S2SLogo } from "@/app/components/shell/S2SLogo";
+import { SignAvatar, AvatarClip } from "@/app/components/avatar/SignAvatar";
 import { markOnboarded } from "@/app/lib/config/onboarding";
+import { textToSign } from "@/app/lib/pipeline/backend";
 
 interface Slide {
   heading: string;
   body: string;
   cta: string;
-  badge: { label: string; sub?: string; icon: React.ReactNode };
-  tint: string;
-  icon: React.ReactNode;
+  /** What the signer signs while this slide is shown. */
+  phrase: string;
 }
-
-const MINT = "linear-gradient(135deg, hsl(var(--illustration-mint-from)), hsl(var(--illustration-mint-to)))";
-const BLUE = "linear-gradient(135deg, hsl(var(--primary-bright)), hsl(var(--primary)))";
-const MIX = "linear-gradient(135deg, hsl(var(--illustration-mint-from)), hsl(var(--primary-bright)))";
 
 const SLIDES: Slide[] = [
   {
     heading: "Break the silence barrier",
-    body: "Real-time communication between hearing and deaf individuals.",
+    body: "Speech becomes ASL signing, and signing becomes speech, live between two people.",
     cta: "Next",
-    badge: { label: "Connected", icon: <Heart className="w-4 h-4" /> },
-    tint: MINT,
-    icon: <Heart className="w-16 h-16" />,
+    phrase: "Hello",
   },
   {
     heading: "Communicate anywhere",
-    body: "Order coffee, visit the doctor, chat with friends. S2S works in everyday situations where communication matters most.",
+    body: "Order coffee, visit the doctor, chat with friends. Pair two phones and talk.",
     cta: "Continue",
-    badge: { label: "Daily Moment", sub: "Seamless interaction", icon: <Sparkles className="w-4 h-4" /> },
-    tint: BLUE,
-    icon: <Sparkles className="w-16 h-16" />,
+    phrase: "Nice to meet you",
   },
   {
-    heading: "Built for everyone",
-    body: "Accessible, inclusive, and easy to use for children, adults, and people with all disabilities. No barriers, just connection.",
-    cta: "Get Started",
-    badge: { label: "Inclusive", icon: <Users className="w-4 h-4" /> },
-    tint: MIX,
-    icon: <Users className="w-16 h-16" />,
+    heading: "Made to fit you",
+    body: "Choose your signer, the voice, larger text and high contrast in Settings.",
+    cta: "Get started",
+    phrase: "Welcome",
   },
 ];
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [index, setIndex] = useState(0);
+  const [clips, setClips] = useState<AvatarClip[]>([]);
+  const [error, setError] = useState("");
+  const signedRef = useRef(new Set<number>());
   const slide = SLIDES[index];
   const last = index === SLIDES.length - 1;
+
+  // Each slide is signed once, the first time it is shown.
+  useEffect(() => {
+    if (signedRef.current.has(index)) return;
+    signedRef.current.add(index);
+    textToSign(SLIDES[index].phrase)
+      .then(({ sigml, nonManual }) => setClips((prev) => [...prev, { id: index, sigml, nonManual }]))
+      .catch((e: Error) => setError(e.message));
+  }, [index]);
 
   const finish = () => {
     markOnboarded();
     router.replace("/");
   };
 
-  const advance = () => {
-    if (last) finish();
-    else setIndex((i) => i + 1);
-  };
-
   return (
     <div className="s2s-shell flex flex-col px-6 pt-6 pb-8">
       <div className="flex items-center justify-between">
         <S2SLogo />
-        <button
-          onClick={finish}
-          className="text-sm font-semibold text-muted-foreground hover:text-foreground"
-        >
+        <button onClick={finish} className="text-sm font-semibold text-muted-foreground hover:text-foreground">
           Skip
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center">
-        {/* Illustration */}
-        <div className="relative w-full max-w-[280px] aspect-[3/4] mb-10">
-          <div
-            className="absolute inset-0 rounded-[48%_48%_46%_46%/52%_52%_48%_48%] grid place-items-center text-white/90 shadow-pill"
-            style={{ background: slide.tint }}
-          >
-            {slide.icon}
-          </div>
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 shadow-card">
-            <span className="w-8 h-8 rounded-xl bg-primary text-primary-foreground grid place-items-center">
-              {slide.badge.icon}
-            </span>
-            <span className="leading-tight">
-              <span className="block text-[13px] font-bold text-foreground">{slide.badge.label}</span>
-              {slide.badge.sub && (
-                <span className="block text-[11px] text-muted-foreground">{slide.badge.sub}</span>
-              )}
-            </span>
-          </div>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center py-6">
+        <SignAvatar clips={clips} variant="stage" showGlosses className="w-full max-w-[300px] h-[340px] shadow-lift" />
+        {error && <p className="mt-2 text-center text-[12px] font-semibold text-destructive">The signer could not load: {error}</p>}
 
-        <h1 className="s2s-heading text-[34px] leading-[1.1] text-center px-2">
-          {slide.heading}
-        </h1>
-        <p className="mt-4 text-center text-muted-foreground text-[15px] leading-relaxed px-2">
-          {slide.body}
-        </p>
+        <div key={index} className="animate-fade-up">
+          <h1 className="mt-8 s2s-heading text-[32px] leading-[1.08] text-center">{slide.heading}</h1>
+          <p className="mt-3 text-center text-muted-foreground text-[15px] leading-relaxed max-w-[32ch] mx-auto">{slide.body}</p>
+        </div>
       </div>
 
       <button
-        onClick={advance}
-        className="s2s-pill-primary h-14 w-full inline-flex items-center justify-center gap-2 text-base"
+        onClick={last ? finish : () => setIndex((i) => i + 1)}
+        className="s2s-pill-primary h-14 w-full inline-flex items-center justify-center gap-2 text-base s2s-press"
       >
         {slide.cta}
         <ArrowRight className="w-5 h-5" />
       </button>
 
-      <div className="mt-6 flex items-center justify-center gap-2">
+      <div className="mt-6 flex items-center justify-center gap-2" aria-label={`Step ${index + 1} of ${SLIDES.length}`}>
         {SLIDES.map((_, i) => (
           <span
             key={i}
-            className={`h-1.5 rounded-full transition-all ${
-              i === index ? "w-6 bg-primary" : "w-1.5 bg-primary/25"
-            }`}
+            className={`h-1.5 rounded-full transition-all duration-500 ${i === index ? "w-8 s2s-ribbon" : "w-1.5 bg-primary/25"}`}
           />
         ))}
       </div>

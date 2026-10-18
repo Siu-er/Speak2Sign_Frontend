@@ -84,16 +84,13 @@ export default {
         'gradient-primary': 'var(--gradient-primary)',
         'gradient-ink': 'var(--gradient-ink)',
         'gradient-stop': 'var(--gradient-stop)',
-        'gradient-illustration': 'var(--gradient-illustration)',
-        'gradient-progress': 'var(--gradient-progress)',
-        'gradient-card': 'var(--gradient-card)',
-        'gradient-mesh': 'var(--gradient-mesh)',
       },
       boxShadow: {
         'card': 'var(--shadow-card)',
         'pill': 'var(--shadow-pill)',
         'pill-soft': 'var(--shadow-pill-soft)',
-        'tab': 'var(--shadow-tab)',
+        'lift': 'var(--shadow-lift)',
+        'glass': 'var(--shadow-glass)',
       },
       transitionTimingFunction: {
         'smooth': 'var(--transition-smooth)',

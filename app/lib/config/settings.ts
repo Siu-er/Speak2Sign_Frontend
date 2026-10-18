@@ -11,8 +11,17 @@ export const SUPPORTED_LANGUAGES = [
   { label: "Spanish", code: "es", translate: true },
 ] as const;
 
-export type AvatarId = "luna" | "siggi" | "anna" | "marc" | "francoise";
-export const AVATARS: AvatarId[] = ["luna", "siggi", "anna", "marc", "francoise"];
+/** Signing characters; each id names /avatars/<id>.vrm and its portrait /avatars/<id>.png. */
+export const AVATARS = [
+  { id: "shino", label: "Shino" },
+  { id: "shibu", label: "Shibu" },
+  { id: "fumiriya", label: "Fumiriya" },
+] as const;
+export type AvatarId = (typeof AVATARS)[number]["id"];
+
+export function isAvatarId(value: unknown): value is AvatarId {
+  return AVATARS.some((a) => a.id === value);
+}
 
 export interface AppSettings {
   language: string;
@@ -35,7 +44,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   highContrast: false,
   haptic: false,
   recordingHistory: true,
-  avatar: "luna",
+  avatar: "shino",
   showLandmarks: false,
 };
 
@@ -45,3 +54,26 @@ export function languageNeedsTranslation(label: string): boolean {
 }
 
 export const SETTINGS_STORAGE_KEY = "s2s:settings";
+
+/**
+ * Settings read back from storage, keeping only stored values that are still
+ * valid; any other field takes its default. Storage outlives releases, so a
+ * value such as a removed avatar must not reach the app.
+ */
+export function sanitizeSettings(stored: unknown): AppSettings {
+  const s = (stored && typeof stored === "object" ? stored : {}) as Record<string, unknown>;
+  const d = DEFAULT_SETTINGS;
+  const num = (v: unknown, fallback: number) => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
+  const bool = (v: unknown, fallback: boolean) => (typeof v === "boolean" ? v : fallback);
+  return {
+    language: SUPPORTED_LANGUAGES.some((l) => l.label === s.language) ? (s.language as string) : d.language,
+    playbackSpeed: num(s.playbackSpeed, d.playbackSpeed),
+    voiceTone: VOICE_TONES.includes(s.voiceTone as VoiceTone) ? (s.voiceTone as VoiceTone) : d.voiceTone,
+    textSize: num(s.textSize, d.textSize),
+    highContrast: bool(s.highContrast, d.highContrast),
+    haptic: bool(s.haptic, d.haptic),
+    recordingHistory: bool(s.recordingHistory, d.recordingHistory),
+    avatar: isAvatarId(s.avatar) ? s.avatar : d.avatar,
+    showLandmarks: bool(s.showLandmarks, d.showLandmarks),
+  };
+}

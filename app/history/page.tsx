@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Search, Mic, Trash2, Volume2, Hand } from "lucide-react";
+import { Search, Mic, Trash2, Volume2, Hand, MessageSquare } from "lucide-react";
 import { AppShell } from "@/app/components/shell/AppShell";
 import { TopHeader } from "@/app/components/shell/TopHeader";
 import { SectionHeading } from "@/app/components/primitives/SectionHeading";
@@ -49,7 +49,7 @@ export default function HistoryPage() {
   return (
     <AppShell>
       <TopHeader />
-      <main className="px-6 flex-1 pb-24 relative">
+      <main className="px-5 flex-1 pb-6 relative">
         <div className="flex items-center justify-between">
           <SectionHeading title="Conversation History" />
           {records.length > 0 && (
@@ -62,21 +62,47 @@ export default function HistoryPage() {
           )}
         </div>
 
-        <div className="mt-5 relative">
-          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search transcripts..."
-            className="w-full h-12 pl-11 pr-4 rounded-full bg-primary-soft/60 text-foreground placeholder:text-muted-foreground/70 outline-none focus:ring-2 focus:ring-primary/30 text-sm font-medium"
-          />
-        </div>
+        {records.length > 0 && (
+          <div className="mt-5 flex gap-2.5">
+            <div className="relative flex-1 min-w-0">
+              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search conversations"
+                aria-label="Search conversations"
+                className="w-full h-12 pl-11 pr-4 rounded-full s2s-card text-foreground placeholder:text-muted-foreground/70 outline-none text-sm font-medium"
+              />
+            </div>
+            <Link
+              href="/pair?role=speaker"
+              aria-label="New conversation"
+              className="shrink-0 w-12 h-12 rounded-full grid place-items-center text-white bg-gradient-primary shadow-pill s2s-press"
+            >
+              <Mic className="w-5 h-5" />
+            </Link>
+          </div>
+        )}
 
         <div className="mt-5 space-y-3">
           {records.length === 0 ? (
-            <p className="text-center py-12 text-muted-foreground text-sm">
-              No conversations yet. Your transcripts appear here once you start talking.
-            </p>
+            <div className="s2s-card mt-4 px-6 py-10 text-center">
+              <div className="mx-auto w-16 h-16 rounded-full p-[3px] s2s-ribbon">
+                <div className="w-full h-full rounded-full bg-white grid place-items-center text-primary">
+                  <MessageSquare className="w-7 h-7" />
+                </div>
+              </div>
+              <p className="mt-4 font-display font-extrabold text-[19px] text-foreground">No conversations yet</p>
+              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed max-w-[28ch] mx-auto">
+                Every line spoken and signed in a conversation is kept here, on this device.
+              </p>
+              <Link
+                href="/pair?role=speaker"
+                className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-primary text-white text-sm font-bold shadow-pill s2s-press"
+              >
+                <Mic className="w-4 h-4" /> Start a conversation
+              </Link>
+            </div>
           ) : filtered.length === 0 ? (
             <p className="text-center py-12 text-muted-foreground text-sm">
               No conversations match your search.
@@ -91,7 +117,7 @@ export default function HistoryPage() {
                   style={{ animationDelay: `${i * 50}ms` }}
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
+                    <p className="s2s-label text-primary">
                       {formatWhen(r.startedAt)}
                     </p>
                     <button
@@ -118,13 +144,6 @@ export default function HistoryPage() {
           )}
         </div>
 
-        <Link
-          href="/pair?role=speaker"
-          className="fixed bottom-28 right-6 w-14 h-14 rounded-full shadow-pill grid place-items-center text-white bg-gradient-primary transition-transform active:scale-95 hover:-translate-y-0.5"
-          aria-label="New conversation"
-        >
-          <Mic className="w-6 h-6" />
-        </Link>
       </main>
     </AppShell>
   );

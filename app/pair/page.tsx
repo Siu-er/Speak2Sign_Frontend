@@ -3,8 +3,9 @@
 import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
-import { ChevronLeft, Link2, Plus, Loader2, Check, Copy, ScanLine } from "lucide-react";
+import { Link2, Plus, Loader2, Check, Copy, ScanLine } from "lucide-react";
 import { AppShell } from "@/app/components/shell/AppShell";
+import { PageHeader } from "@/app/components/shell/PageHeader";
 import { Pill } from "@/app/components/primitives/Pill";
 import { Chip } from "@/app/components/primitives/Chip";
 import { useRoom } from "@/app/hooks/useRoom";
@@ -95,18 +96,7 @@ function PairInner() {
 
   return (
     <AppShell showNav={false}>
-      <header className="px-6 pt-6 pb-2 flex items-center justify-between">
-        <button
-          onClick={() => router.push("/")}
-          className="flex items-center gap-2 text-primary font-semibold"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          <span className="text-sm">Back</span>
-        </button>
-        <span className="font-display font-extrabold text-primary tracking-tight">
-          S2S
-        </span>
-      </header>
+      <PageHeader backHref="/" />
 
       <main className="flex-1 px-6 pb-8 flex flex-col">
         <div className="animate-fade-up">

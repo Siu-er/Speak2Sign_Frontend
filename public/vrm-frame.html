@@ -36,7 +36,7 @@
       var FourCC = env.get("FourCC");
       // rest: the idle pose before any signing; signing/changedAt: the engine's
       // activity state, used to ease into and out of signs.
-      var motion = window.s2sMotion = { names: null, prev: null, curr: null, rest: null, signing: false, played: false, changedAt: 0 };
+      var motion = window.s2sMotion = { names: null, prev: null, curr: null, rest: null, signing: false, played: false, changedAt: 0, brows: null, headShake: false };
 
       function position(trx) {
         var t = trx._t ? (trx._t.xyz || trx._t) : trx.t || trx[0];
@@ -57,17 +57,53 @@
       };
 
       var jasBase = "https://pub-233bfe19474b4be58fb4a245b6800823.r2.dev/jas/loc2025/";
+      // Sentences play one at a time, so each carries its own facial mood and
+      // the sign index reported to the page belongs to the sentence on screen.
       var queue = [];
+      var current = null;
+      var startTimer = null;
       var engineReady = false;
+      // Animgen must begin a sentence within this time; longer means the SiGML
+      // was rejected, which is reported rather than leaving the queue stalled.
+      var START_TIMEOUT_MS = 8000;
+
+      function post(msg) { parent.postMessage(msg, "*"); }
 
       function flush() {
-        if (!engineReady || !window.s2sRendererReady) return;
-        while (queue.length) window.CWASA.playSiGMLText(queue.shift());
+        if (!engineReady || !window.s2sRendererReady || current || !queue.length) return;
+        current = queue.shift();
+        motion.brows = current.brows;
+        motion.headShake = current.headShake;
+        startTimer = setTimeout(function () {
+          post({ type: "s2s-avatar-error", message: "The avatar could not play this sentence." });
+          current = null;
+          motion.brows = null;
+          motion.headShake = false;
+          flush();
+        }, START_TIMEOUT_MS);
+        window.CWASA.playSiGMLText(current.sigml);
       }
       window.s2sFlush = flush;
 
-      CWASA.addHook("animactive", function () { motion.signing = true; motion.played = true; motion.changedAt = performance.now(); });
-      CWASA.addHook("animidle", function () { if (motion.signing) { motion.signing = false; motion.changedAt = performance.now(); } });
+      var lastSign = -1;
+      CWASA.addHook("animactive", function () {
+        clearTimeout(startTimer);
+        motion.signing = true; motion.played = true; motion.changedAt = performance.now();
+      });
+      CWASA.addHook("avatarframe", function (evt) {
+        var s = evt && evt.msg ? evt.msg.s : undefined;
+        if (typeof s === "number" && s !== lastSign) { lastSign = s; post({ type: "s2s-sign", index: s }); }
+      });
+      CWASA.addHook("animidle", function () {
+        if (!motion.signing) return;
+        motion.signing = false; motion.changedAt = performance.now();
+        motion.brows = null;
+        motion.headShake = false;
+        lastSign = -1;
+        post({ type: "s2s-sign", index: -1 });
+        current = null;
+        flush();
+      });
       CWASA.addHook("avatarloaded", function () { engineReady = true; window.s2sAnnounce(); flush(); });
       CWASA.init({ avsmotion: ["luna"], avSettings: { avList: "avsmotion", initAv: "luna" }, jasBase: jasBase, cwaBase: jasBase + "cwa/" });
 
@@ -75,7 +111,12 @@
       window.addEventListener("message", function (ev) {
         var data = ev.data || {};
         if (data.type === "s2s-play" && typeof data.sigml === "string" && data.sigml.trim()) {
-          queue.push(data.sigml);
+          var nm = data.nonManual || {};
+          queue.push({
+            sigml: data.sigml,
+            brows: nm.brows === "raise" || nm.brows === "furrow" ? nm.brows : null,
+            headShake: nm.head === "shake",
+          });
           flush();
         }
       });
@@ -84,7 +125,7 @@
       window.s2sAnnounce = function () {
         if (announced || !engineReady || !window.s2sRendererReady) return;
         announced = true;
-        parent.postMessage({ type: "s2s-avatar-ready" }, "*");
+        post({ type: "s2s-avatar-ready" });
       };
     })();
   </script>
@@ -342,13 +383,64 @@
       return Math.sin((since / 160) * Math.PI);
     }
 
+    // Spring bones (hair, cloth) integrate per frame: a long first step, or a
+    // frame after the tab was hidden, flings them outward. The step is capped,
+    // and the springs restart from the first real pose instead of the T-pose.
+    const MAX_STEP_S = 1 / 30;
+
+    // Eye contact: the gaze rests on the viewer and follows the pointer across the stage.
+    const lookTarget = new THREE.Object3D();
+    scene.add(lookTarget);
+    if (vrm.lookAt) vrm.lookAt.target = lookTarget;
+    const pointer = { x: 0, y: 0 };
+    window.addEventListener("pointermove", (e) => {
+      pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = (e.clientY / window.innerHeight) * 2 - 1;
+    });
+    document.addEventListener("pointerleave", () => { pointer.x = 0; pointer.y = 0; });
+
+    // Facial grammar and warmth. ASL marks a yes/no question with raised brows,
+    // a WH question with lowered brows and negation with a head shake, held
+    // while the sentence is signed; a brief smile follows each sentence.
+    const BROW_RAISE = 0.4;
+    const BROW_FURROW = 0.3;
+    const SHAKE_RAD = 0.12;
+    const SHAKE_HZ = 2.2;
+    const SMILE = 0.35;
+    const SMILE_MS = 1600;
+    let smileUntil = 0, wasSigning = false;
+    const mood = { surprised: 0, angry: 0, happy: 0 };
+    function updateMood(now, dt) {
+      if (wasSigning && !motion.signing) smileUntil = now + SMILE_MS;
+      wasSigning = motion.signing;
+      const target = {
+        surprised: motion.signing && motion.brows === "raise" ? BROW_RAISE : 0,
+        angry: motion.signing && motion.brows === "furrow" ? BROW_FURROW : 0,
+        happy: now < smileUntil ? SMILE : 0,
+      };
+      const k = Math.min(1, dt * 6);
+      for (const name of Object.keys(mood)) {
+        mood[name] += (target[name] - mood[name]) * k;
+        vrm.expressionManager?.setValue(name, mood[name]);
+      }
+    }
     const clock = new THREE.Clock();
+    let posed = false;
     renderer.setAnimationLoop(() => {
       const now = performance.now();
       const jp = poseAt(now);
       if (jp) applyFrame(jp);
+      if (jp && motion.signing && motion.headShake) node("head").rotateY(Math.sin((now / 1000) * 2 * Math.PI * SHAKE_HZ) * SHAKE_RAD);
       vrm.expressionManager?.setValue("blink", blinkWeight(now));
-      vrm.update(clock.getDelta());
+      const dt = Math.min(clock.getDelta(), MAX_STEP_S);
+      updateMood(now, dt);
+      lookTarget.position.set(camera.position.x + pointer.x * 0.45, camera.position.y - pointer.y * 0.3, camera.position.z);
+      if (jp && !posed) {
+        posed = true;
+        vrm.scene.updateMatrixWorld(true);
+        vrm.springBoneManager?.reset();
+      }
+      vrm.update(dt);
       renderer.render(scene, camera);
     });
 

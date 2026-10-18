@@ -1,20 +1,20 @@
 "use client";
 
 import React, { useCallback, useRef, useState } from "react";
-import { Mic, MicOff, Send, Globe, TriangleAlert } from "lucide-react";
+import { Send, Globe, TriangleAlert } from "lucide-react";
 import { PageShell } from "@/app/components/shell/PageShell";
-import { LiveAvatar, AvatarClip } from "@/app/components/live/LiveAvatar";
+import { SignAvatar, AvatarClip } from "@/app/components/avatar/SignAvatar";
+import { MicButton } from "@/app/components/primitives/MicButton";
 import { useLiveSpeech } from "@/app/hooks/useLiveSpeech";
-import { textToGloss, glossToSigml, translateToEnglish } from "@/app/lib/pipeline/backend";
+import { textToSign, translateToEnglish } from "@/app/lib/pipeline/backend";
 import { SPEECH_LANGUAGES, DEFAULT_SPEECH_LANG } from "@/app/lib/config/languages";
 
 const PHRASES = ["Hello, nice to meet you", "Thank you", "How are you?", "I need help", "Please wait", "Goodbye"];
 
 export default function LivePage() {
   const [clips, setClips] = useState<AvatarClip[]>([]);
-  const [captions, setCaptions] = useState<string[]>([]);
+  const [caption, setCaption] = useState("");
   const [source, setSource] = useState("");
-  const [spelled, setSpelled] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [text, setText] = useState("");
@@ -24,105 +24,90 @@ export default function LivePage() {
   const queueRef = useRef<Promise<void>>(Promise.resolve());
   const idRef = useRef(0);
 
-  const signText = useCallback((raw: string) => {
-    const phrase = raw.trim();
-    if (!phrase) return;
-    setCaptions((prev) => [...prev.slice(-3), phrase]);
+  const enqueue = useCallback((work: () => Promise<void>) => {
     setError("");
     setBusy(true);
     queueRef.current = queueRef.current
-      .then(async () => {
-        const gloss = await textToGloss(phrase);
-        const { sigml, fingerspelled } = await glossToSigml(gloss);
-        if (sigml?.trim()) setClips((prev) => [...prev, { id: idRef.current++, sigml }]);
-        setSpelled(fingerspelled.map((w) => w.replace(/^FS-/, "")));
-      })
+      .then(work)
       .catch((e: Error) => setError(e.message))
       .finally(() => setBusy(false));
   }, []);
 
-  const onFinal = useCallback((raw: string) => {
+  const signText = useCallback((english: string) => {
+    setCaption(english);
+    return textToSign(english).then(({ sigml, nonManual }) => {
+      if (!sigml.trim()) throw new Error(`No signs were produced for "${english}".`);
+      setClips((prev) => [...prev, { id: idRef.current++, sigml, nonManual }]);
+    });
+  }, []);
+
+  const say = useCallback((raw: string) => {
     const phrase = raw.trim();
     if (!phrase) return;
     if (lang === DEFAULT_SPEECH_LANG) {
       setSource("");
-      signText(phrase);
-      return;
+      enqueue(() => signText(phrase));
+    } else {
+      setSource(phrase);
+      enqueue(() => translateToEnglish(phrase).then(signText));
     }
-    setSource(phrase);
-    setError("");
-    setBusy(true);
-    queueRef.current = queueRef.current
-      .then(() => translateToEnglish(phrase))
-      .then((english) => signText(english))
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setBusy(false));
-  }, [lang, signText]);
+  }, [lang, enqueue, signText]);
 
-  const { listening, interim, supported, start, stop } = useLiveSpeech({ onFinal, lang });
+  const speech = useLiveSpeech({ onFinal: say, lang });
 
-  const submitText = (e: React.FormEvent) => { e.preventDefault(); setSource(""); signText(text); setText(""); };
-  const submitName = (e: React.FormEvent) => { e.preventDefault(); if (name.trim()) { setSource(""); signText(name.trim()); } };
+  const submitText = (e: React.FormEvent) => {
+    e.preventDefault();
+    const sentence = text.trim();
+    if (!sentence) return;
+    setSource("");
+    enqueue(() => signText(sentence));
+    setText("");
+  };
+  const submitName = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (name.trim()) { setSource(""); enqueue(() => signText(name.trim())); }
+  };
+
+  const problem = error || speech.error;
 
   return (
-    <PageShell title="Live Sign" eyebrow="Say it, see it signed" className="gap-3">
-      {/* avatar stage */}
-      <div className="flex-1 min-h-0 flex flex-col">
-        <LiveAvatar clips={clips} className="w-full flex-1 min-h-0 rounded-[26px] shadow-card bg-gradient-to-b from-slate-100 to-slate-200/70 border border-white/60" />
-        <div className="mt-2.5 min-h-[1.75rem] text-center">
-          {interim ? (
-            <span className="text-primary/70 text-[15px] italic">{interim}</span>
-          ) : captions.length > 0 ? (
-            <span className="font-display font-extrabold text-foreground text-[17px]">&ldquo;{captions[captions.length - 1]}&rdquo;</span>
-          ) : (
-            <span className="text-muted-foreground/60 italic text-sm">Tap the mic, type, or pick a phrase.</span>
-          )}
-        </div>
-        {source && (
-          <p className="mt-0.5 text-center text-[12px] text-muted-foreground/80">heard: {source}</p>
-        )}
-        {error && (
-          <p className="mt-1 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-destructive">
-            <TriangleAlert className="w-3.5 h-3.5 shrink-0" /> {error}
-          </p>
-        )}
-        {spelled.length > 0 && (
-          <div className="mt-1 flex flex-wrap justify-center gap-1.5">
-            {spelled.map((w, i) => (
-              <span key={`${w}-${i}`} className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold tracking-wide">{w}</span>
+    <PageShell title="Live Sign" subtitle="Say it, see it signed" className="gap-3">
+      <SignAvatar clips={clips} variant="stage" showGlosses className="w-full flex-1 min-h-[320px]" />
+
+      {/* What was heard: live words while speaking, then the settled sentence. */}
+      <div className="min-h-[3.25rem] text-center px-2" aria-live="polite">
+        {speech.interim ? (
+          <p className="text-[17px] font-semibold text-primary/80 leading-snug">
+            {speech.interim.split(" ").map((w, i) => (
+              <span key={`${i}-${w}`} className="inline-block animate-fade-up mr-1" style={{ animationDuration: "260ms" }}>{w}</span>
             ))}
-          </div>
+          </p>
+        ) : caption ? (
+          <p className="font-display font-extrabold text-foreground text-[19px] leading-snug">{caption}</p>
+        ) : (
+          <p className="text-muted-foreground text-sm pt-2">Speak, type, or pick a phrase below.</p>
+        )}
+        {source && <p className="mt-0.5 text-[12px] text-muted-foreground">Heard in your language: {source}</p>}
+        {busy && !speech.interim && <div className="mx-auto mt-2 h-1 w-20 rounded-full s2s-ribbon animate-ribbon-flow" aria-label="Translating" />}
+        {problem && (
+          <p className="mt-1.5 flex items-center justify-center gap-1.5 text-[12px] font-semibold text-destructive">
+            <TriangleAlert className="w-3.5 h-3.5 shrink-0" /> {problem}
+          </p>
         )}
       </div>
 
-      {/* controls */}
       <div className="space-y-2.5">
-        <div className="flex justify-center">
-          <label className="inline-flex items-center gap-2 rounded-full bg-white/80 border border-primary/10 pl-3 pr-2 py-1 shadow-pill-soft text-[13px] font-semibold text-foreground">
-            <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span className="sr-only">Spoken language</span>
-            <select
-              value={lang}
-              onChange={(e) => { if (listening) stop(); setLang(e.target.value); setSource(""); }}
-              className="bg-transparent outline-none font-semibold text-[13px] pr-1 cursor-pointer"
-            >
-              {SPEECH_LANGUAGES.map((l) => (
-                <option key={l.tag} value={l.tag}>{l.label}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-
         <div className="flex items-center gap-2.5">
-          {supported && (
-            <button onClick={listening ? stop : start} title={listening ? "Stop" : "Speak"}
-              className={`shrink-0 w-14 h-14 rounded-full grid place-items-center text-white shadow-pill transition-transform active:scale-95 ${listening ? "bg-recording animate-pulse" : "bg-primary"}`}>
-              {listening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-            </button>
-          )}
-          <form onSubmit={submitText} className="flex-1 flex items-center gap-2 bg-white/90 rounded-full border border-primary/10 px-4 py-2.5 shadow-pill-soft">
-            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type to sign..." className="flex-1 bg-transparent outline-none text-[15px] font-medium min-w-0" />
-            <button type="submit" disabled={!text.trim() || busy} className="shrink-0 w-8 h-8 rounded-full grid place-items-center bg-primary text-white disabled:opacity-40">
+          {speech.supported && <MicButton listening={speech.listening} onToggle={speech.listening ? speech.stop : speech.start} />}
+          <form onSubmit={submitText} className="flex-1 flex items-center gap-2 s2s-card rounded-full px-4 py-2">
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Type a sentence"
+              aria-label="Sentence to sign"
+              className="flex-1 bg-transparent outline-none text-[15px] font-medium min-w-0 py-1"
+            />
+            <button type="submit" aria-label="Sign it" disabled={!text.trim() || busy} className="shrink-0 w-9 h-9 rounded-full grid place-items-center bg-gradient-primary text-white disabled:opacity-40 s2s-press">
               <Send className="w-4 h-4" />
             </button>
           </form>
@@ -130,15 +115,41 @@ export default function LivePage() {
 
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {PHRASES.map((p) => (
-            <button key={p} onClick={() => { setSource(""); signText(p); }} className="shrink-0 px-3.5 py-1.5 rounded-full bg-white/80 border border-primary/10 text-[13px] font-semibold text-foreground shadow-pill-soft hover:border-primary/40 hover:text-primary transition-colors whitespace-nowrap">{p}</button>
+            <button
+              key={p}
+              onClick={() => { setSource(""); enqueue(() => signText(p)); }}
+              className="shrink-0 px-3.5 py-1.5 rounded-full s2s-card text-[13px] font-semibold text-foreground hover:text-primary whitespace-nowrap s2s-press"
+            >
+              {p}
+            </button>
           ))}
         </div>
 
-        <form onSubmit={submitName} className="flex items-center gap-2 bg-white/70 rounded-full border border-primary/10 px-4 py-2 shadow-pill-soft">
-          <span className="text-[13px] font-semibold text-muted-foreground shrink-0">Fingerspell:</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="your name" className="flex-1 bg-transparent outline-none text-[14px] font-medium min-w-0" />
-          <button type="submit" disabled={!name.trim()} className="shrink-0 px-3.5 py-1 rounded-full bg-ink text-white text-[13px] font-bold disabled:opacity-40">Spell</button>
-        </form>
+        <div className="grid grid-cols-[1fr_auto] gap-2.5">
+          <form onSubmit={submitName} className="min-w-0 flex items-center gap-2 s2s-card rounded-full pl-4 pr-1.5 py-1.5">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Name to spell"
+              aria-label="Name to fingerspell"
+              className="flex-1 bg-transparent outline-none text-[14px] font-medium min-w-0"
+            />
+            <button type="submit" disabled={!name.trim()} className="shrink-0 px-3.5 py-1.5 rounded-full bg-ink text-white text-[13px] font-bold disabled:opacity-40 s2s-press">Spell</button>
+          </form>
+          <label className="inline-flex items-center gap-1.5 s2s-card rounded-full pl-3 pr-2 text-[13px] font-semibold text-foreground">
+            <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
+            <span className="sr-only">Spoken language</span>
+            <select
+              value={lang}
+              onChange={(e) => { if (speech.listening) speech.stop(); setLang(e.target.value); setSource(""); }}
+              className="bg-transparent outline-none font-semibold text-[13px] cursor-pointer w-[78px]"
+            >
+              {SPEECH_LANGUAGES.map((l) => (
+                <option key={l.tag} value={l.tag}>{l.label}</option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
     </PageShell>
   );

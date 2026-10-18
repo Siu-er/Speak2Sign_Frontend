@@ -3,8 +3,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import jsQR from "jsqr";
-import { ChevronLeft } from "lucide-react";
 import { AppShell } from "@/app/components/shell/AppShell";
+import { PageHeader } from "@/app/components/shell/PageHeader";
 
 /** Camera QR scanner. Decodes a /conversation deep-link and navigates to it. */
 export default function ScanPage() {
@@ -98,16 +98,7 @@ export default function ScanPage() {
 
   return (
     <AppShell showNav={false}>
-      <header className="px-6 pt-6 pb-2 flex items-center justify-between">
-        <button
-          onClick={() => router.push("/pair")}
-          className="flex items-center gap-2 text-primary font-semibold"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          <span className="text-sm">Back</span>
-        </button>
-        <span className="font-display font-extrabold text-primary tracking-tight">S2S</span>
-      </header>
+      <PageHeader backHref="/pair" />
 
       <main className="flex-1 px-6 pb-8 flex flex-col">
         <h1 className="s2s-heading text-[30px] leading-[1.1] mb-2">Scan to join</h1>

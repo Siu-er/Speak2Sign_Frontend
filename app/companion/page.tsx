@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useCallback, useRef, useState } from "react";
-import { Mic, MicOff } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
 import { PageShell } from "@/app/components/shell/PageShell";
-import { LiveAvatar, AvatarClip } from "@/app/components/live/LiveAvatar";
+import { SignAvatar, AvatarClip } from "@/app/components/avatar/SignAvatar";
+import { MicButton } from "@/app/components/primitives/MicButton";
 import { useLiveSpeech } from "@/app/hooks/useLiveSpeech";
-import { textToGloss, glossToSigml } from "@/app/lib/pipeline/backend";
+import { textToSign } from "@/app/lib/pipeline/backend";
 
 export default function CompanionPage() {
   const [clips, setClips] = useState<AvatarClip[]>([]);
   const [caption, setCaption] = useState("");
+  const [error, setError] = useState("");
   const queueRef = useRef<Promise<void>>(Promise.resolve());
   const idRef = useRef(0);
 
@@ -17,45 +19,52 @@ export default function CompanionPage() {
     const phrase = raw.trim();
     if (!phrase) return;
     setCaption(phrase);
+    setError("");
     queueRef.current = queueRef.current
       .then(async () => {
-        const gloss = await textToGloss(phrase);
-        const { sigml } = await glossToSigml(gloss);
-        if (sigml?.trim()) setClips((prev) => [...prev, { id: idRef.current++, sigml }]);
+        const { sigml, nonManual } = await textToSign(phrase);
+        if (!sigml.trim()) throw new Error(`No signs were produced for "${phrase}".`);
+        setClips((prev) => [...prev, { id: idRef.current++, sigml, nonManual }]);
       })
-      .catch(() => { /* keep alive */ });
+      .catch((e: Error) => setError(e.message));
   }, []);
 
-  const { listening, interim, supported, start, stop } = useLiveSpeech({ onFinal: signText });
+  const speech = useLiveSpeech({ onFinal: signText });
+  const problem = error || speech.error;
 
   const statusChip = (
-    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${listening ? "text-emerald-400" : "text-white/40"}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${listening ? "bg-emerald-400 animate-pulse" : "bg-white/30"}`} />
-      {listening ? "Live" : "Off"}
+    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${speech.listening ? "text-emerald-400" : "text-white/45"}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${speech.listening ? "bg-emerald-400 animate-pulse" : "bg-white/30"}`} />
+      {speech.listening ? "Live" : "Off"}
     </span>
   );
 
   return (
-    <PageShell title="Companion" eyebrow="Sign along in a call" action={statusChip} dark className="gap-3">
-      <LiveAvatar clips={clips} className="flex-1 min-h-0 w-full rounded-[26px] bg-gradient-to-b from-slate-100 to-slate-200/70 border border-white/10 shadow-card" />
+    <PageShell title="Companion" subtitle="Sign along in a call" action={statusChip} dark className="gap-4">
+      <SignAvatar clips={clips} variant="stage" showGlosses className="flex-1 min-h-[360px] w-full" />
 
-      <div className="min-h-[2rem] text-center">
-        {interim ? (
-          <span className="text-white/60 text-[15px] italic">{interim}</span>
+      <div className="min-h-[2.5rem] text-center" aria-live="polite">
+        {speech.interim ? (
+          <p className="text-white/70 text-[16px] font-medium">{speech.interim}</p>
         ) : caption ? (
-          <span className="font-semibold text-white text-[16px]">{caption}</span>
+          <p className="font-display font-extrabold text-white text-[18px]">{caption}</p>
         ) : (
-          <span className="text-white/40 text-sm italic">{supported ? "Press start and speak." : "Live speech not supported here."}</span>
+          <p className="text-white/45 text-sm">{speech.supported ? "Start listening and speak, or let the call's audio play near the microphone." : "Live speech needs Chrome or Edge."}</p>
+        )}
+        {problem && (
+          <p className="mt-1.5 flex items-center justify-center gap-1.5 text-[12px] font-semibold text-rose-300">
+            <TriangleAlert className="w-3.5 h-3.5 shrink-0" /> {problem}
+          </p>
         )}
       </div>
 
-      {supported && (
-        <button onClick={listening ? stop : start}
-          className={`h-13 py-3.5 rounded-full inline-flex items-center justify-center gap-2 font-bold text-[15px] transition-colors ${listening ? "bg-recording text-white" : "bg-primary text-white"}`}>
-          {listening ? <><MicOff className="w-5 h-5" /> Stop</> : <><Mic className="w-5 h-5" /> Start signing</>}
-        </button>
+      {speech.supported && (
+        <div className="flex flex-col items-center gap-2">
+          <MicButton listening={speech.listening} onToggle={speech.listening ? speech.stop : speech.start} size={68} />
+          <p className="text-[12px] font-semibold text-white/55">{speech.listening ? "Listening" : "Tap to start listening"}</p>
+        </div>
       )}
-      <p className="text-center text-[11px] text-white/35 leading-relaxed">Pop this out into a small window over your call, or share it into the meeting.</p>
+      <p className="text-center text-[11px] text-white/35 leading-relaxed">Keep this window beside your call, or share it into the meeting.</p>
     </PageShell>
   );
 }

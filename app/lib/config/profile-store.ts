@@ -1,18 +1,13 @@
 "use client";
 
+/** What S2S keeps about the person using this device, stored on the device only. */
 export interface UserProfile {
   name: string;
-  email: string;
-  phone: string;
 }
 
 export const PROFILE_STORAGE_KEY = "s2s:profile";
 
-export const EMPTY_PROFILE: UserProfile = {
-  name: "",
-  email: "",
-  phone: "",
-};
+export const EMPTY_PROFILE: UserProfile = { name: "" };
 
 type Listener = (p: UserProfile) => void;
 
@@ -25,9 +20,12 @@ function load(): void {
   loaded = true;
   try {
     const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
-    if (raw) current = { ...EMPTY_PROFILE, ...JSON.parse(raw) };
+    if (raw) {
+      const stored = JSON.parse(raw);
+      current = { name: stored && typeof stored.name === "string" ? stored.name : "" };
+    }
   } catch {
-    /* keep empty */
+    /* unreadable storage: the profile starts empty */
   }
 }
 
@@ -42,7 +40,7 @@ export function updateProfile(patch: Partial<UserProfile>): void {
   try {
     localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(current));
   } catch {
-    /* noop */
+    /* storage unavailable: the change lasts for this visit */
   }
   const snap = current;
   listeners.forEach((l) => l(snap));
@@ -55,10 +53,10 @@ export function subscribeProfile(listener: Listener): () => void {
   return () => listeners.delete(listener);
 }
 
-/** Up-to-two-letter monogram from the name, or a neutral placeholder. */
+/** Up-to-two-letter monogram from the name; empty when no name is set. */
 export function profileInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "S2";
+  if (parts.length === 0) return "";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }

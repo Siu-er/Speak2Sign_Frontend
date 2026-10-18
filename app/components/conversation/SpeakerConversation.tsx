@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 import { Chip } from "@/app/components/primitives/Chip";
-import { HoldButton } from "@/app/components/conversation/HoldButton";
+import { MicButton } from "@/app/components/primitives/MicButton";
 import { useRoom } from "@/app/hooks/useRoom";
 import { useSettings } from "@/app/hooks/useSettings";
 import { useConversationLog } from "@/app/hooks/useConversationLog";
@@ -40,7 +40,7 @@ export function SpeakerConversation() {
     record("speaker", text);
   }, [record]);
 
-  const { listening, interim, supported, start, stop } = useLiveSpeech({ onFinal });
+  const { listening, interim, supported, error: speechError, start, stop } = useLiveSpeech({ onFinal });
 
   // Spacebar toggle
   useEffect(() => {
@@ -86,29 +86,46 @@ export function SpeakerConversation() {
     return unsubscribe;
   }, [onMessage, speak, record]);
 
-  const lastSentence = sentences[sentences.length - 1] || "";
+  // The signer's recent sentences, newest last; older ones fade back.
+  const recent = sentences.slice(-3);
 
   return (
     <div className="flex flex-col gap-3">
       {/* Incoming signs */}
       <div className="s2s-card p-4 min-h-[6.5rem]">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Signer says</p>
+          <p className="s2s-label text-muted-foreground">Signer says</p>
           <button onClick={() => setSpeakEnabled((v) => !v)} className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
             {speakEnabled ? <><Volume2 className="w-4 h-4" /> Voice on</> : <><VolumeX className="w-4 h-4" /> Muted</>}
           </button>
         </div>
-        {lastSentence ? (
-          <p className="font-display font-extrabold text-foreground text-[24px] leading-[1.2] tracking-tight">{lastSentence}</p>
+        {recent.length > 0 ? (
+          <div className="flex flex-col gap-2" aria-live="polite">
+            {recent.map((sentence, i) => {
+              const newest = i === recent.length - 1;
+              return (
+                <p
+                  key={sentences.length - recent.length + i}
+                  className={`self-start max-w-[92%] rounded-[18px] rounded-bl-md px-3.5 py-2 leading-snug ${
+                    newest
+                      ? "bg-ink text-white font-display font-extrabold text-[20px] animate-scale-in"
+                      : "bg-white/70 text-muted-foreground text-[14px] font-semibold"
+                  }`}
+                >
+                  {sentence}
+                </p>
+              );
+            })}
+          </div>
         ) : (
-          <p className="text-muted-foreground/70 italic">Waiting for the signer...</p>
+          <p className="text-muted-foreground">Waiting for the signer to sign.</p>
         )}
       </div>
 
       {/* Outgoing speech */}
       <div className="s2s-card p-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">You speak</p>
+          <p className="s2s-label text-muted-foreground">You speak</p>
           {listening ? (
             <Chip tone="amber" size="sm" className="gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-recording animate-pulse" /> Listening
@@ -131,18 +148,12 @@ export function SpeakerConversation() {
         </div>
 
         {!supported && (
-          <p className="text-center text-xs text-destructive mb-2">Live speech not supported in this browser. Use Chrome.</p>
+          <p className="text-center text-xs text-destructive mb-2">Live speech needs Chrome or Edge.</p>
         )}
+        {speechError && <p className="text-center text-xs font-semibold text-destructive mb-2">{speechError}</p>}
 
-        <div className="flex flex-col items-center gap-1.5">
-          <HoldButton
-            recording={listening}
-            processing={false}
-            icon={listening ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
-            onDown={start}
-            onUp={stop}
-            toggle
-          />
+        <div className="flex flex-col items-center gap-2 pt-1">
+          <MicButton listening={listening} onToggle={listening ? stop : start} size={72} disabled={!supported} />
           <p className="text-xs font-semibold text-muted-foreground">
             {listening ? "Tap to stop" : "Tap to speak"}
           </p>

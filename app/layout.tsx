@@ -4,6 +4,8 @@ import { Toaster } from "@/app/components/ui/toaster";
 import { Toaster as Sonner } from "@/app/components/ui/sonner";
 import { TooltipProvider } from "@/app/components/ui/tooltip";
 import { ReactQueryProvider } from '@/app/providers'
+import { Backdrop } from '@/app/components/shell/Backdrop'
+import { DesktopAside } from '@/app/components/shell/DesktopAside'
 import '@/app/globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
@@ -33,7 +35,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            {children}
+            <Backdrop />
+            <div className="lg:min-h-screen lg:flex lg:items-center lg:justify-center lg:gap-20 lg:px-10">
+              <DesktopAside />
+              {children}
+            </div>
           </TooltipProvider>
         </ReactQueryProvider>
       </body>

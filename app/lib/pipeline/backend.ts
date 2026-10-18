@@ -27,9 +27,21 @@ export async function translateToEnglish(text: string): Promise<string> {
   return data.text.trim();
 }
 
-export async function textToGloss(text: string): Promise<string> {
-  const data = await postJson<{ gloss: string }>("/text-to-gloss", { text });
-  return data.gloss;
+/** Sentence-level non-manual grammar the glosser derives: brows raise for a
+ *  yes/no question, furrow for a WH question; the head shakes for negation. */
+export interface NonManual {
+  brows: "raise" | "furrow" | null;
+  head: "shake" | null;
+}
+
+export interface GlossResult {
+  gloss: string;
+  nonManual: NonManual;
+}
+
+export async function textToGloss(text: string): Promise<GlossResult> {
+  const data = await postJson<{ gloss: string; non_manual_markers: NonManual }>("/text-to-gloss", { text });
+  return { gloss: data.gloss, nonManual: { brows: data.non_manual_markers.brows, head: data.non_manual_markers.head } };
 }
 
 export interface SigmlResult {
@@ -44,6 +56,16 @@ export async function glossToSigml(gloss: string): Promise<SigmlResult> {
     { gloss },
   );
   return { sigml: data.sigml, fingerspelled: data.fingerspelled ?? [] };
+}
+
+export interface SignResult extends SigmlResult, GlossResult {}
+
+/** English text to everything the avatar needs: the SiGML to sign and the
+ *  sentence's non-manual grammar. */
+export async function textToSign(text: string): Promise<SignResult> {
+  const glossed = await textToGloss(text);
+  const signed = await glossToSigml(glossed.gloss);
+  return { ...glossed, ...signed };
 }
 
 export interface RecognitionResult {

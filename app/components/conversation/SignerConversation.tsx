@@ -2,21 +2,14 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Video, Loader2, Hand } from "lucide-react";
-import { SiGMLDisplay } from "@/app/components/SiGMLDisplay";
+import { SignAvatar, AvatarClip } from "@/app/components/avatar/SignAvatar";
 import { HoldButton } from "@/app/components/conversation/HoldButton";
 import { useRoom } from "@/app/hooks/useRoom";
 import { useSettings } from "@/app/hooks/useSettings";
 import { useConversationLog } from "@/app/hooks/useConversationLog";
 import { useSignRecorder } from "@/app/hooks/useSignRecorder";
 import { useHandOverlay } from "@/app/hooks/useHandOverlay";
-import { glossToSigml, textToGloss } from "@/app/lib/pipeline/backend";
-
-interface SentenceSegment {
-  transcription: string;
-  gloss: string;
-  sigml: string;
-  fingerspelled: string[];
-}
+import { textToSign } from "@/app/lib/pipeline/backend";
 
 /** Signer device: holds to record one sign at a time, receives speech as avatar. */
 export function SignerConversation() {
@@ -72,11 +65,13 @@ export function SignerConversation() {
   }, []);
 
   // Incoming: speech -> avatar
-  const [sentences, setSentences] = useState<SentenceSegment[]>([]);
+  const [clips, setClips] = useState<AvatarClip[]>([]);
+  const [lastText, setLastText] = useState("");
   const [pendingText, setPendingText] = useState("");
   const [busy, setBusy] = useState(false);
   const [incomingError, setIncomingError] = useState("");
   const queueRef = useRef<Promise<void>>(Promise.resolve());
+  const clipIdRef = useRef(0);
 
   const onMessage = room.onMessage;
   useEffect(() => {
@@ -89,9 +84,10 @@ export function SignerConversation() {
       queueRef.current = queueRef.current
         .then(async () => {
           setIncomingError("");
-          const gloss = await textToGloss(text);
-          const { sigml, fingerspelled } = await glossToSigml(gloss);
-          setSentences((prev) => [...prev, { transcription: text, gloss, sigml, fingerspelled }]);
+          const { sigml, nonManual } = await textToSign(text);
+          if (!sigml.trim()) throw new Error("no signs were produced");
+          setClips((prev) => [...prev, { id: clipIdRef.current++, sigml, nonManual }]);
+          setLastText(text);
         })
         // Each sentence reports its own failure; the queue stays open for the next one.
         .catch((e: Error) => setIncomingError(`Could not sign "${text}": ${e.message}`))
@@ -108,21 +104,14 @@ export function SignerConversation() {
       {/* Incoming speech as avatar */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          <p className="s2s-label text-muted-foreground">
             Speaker says
           </p>
           {busy && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
         </div>
-        <SiGMLDisplay
-          sentences={sentences}
-          currentSegment={{}}
-        />
-        <p className="mt-1.5 text-sm text-foreground min-h-[1.25rem]">
-          {pendingText
-            ? `“${pendingText}”`
-            : sentences.length > 0
-            ? `“${sentences[sentences.length - 1].transcription}”`
-            : ""}
+        <SignAvatar clips={clips} variant="compact" showGlosses replayable className="h-[240px]" />
+        <p className="mt-2 text-[15px] font-semibold text-foreground min-h-[1.25rem] leading-snug">
+          {pendingText ? `“${pendingText}”` : lastText ? `“${lastText}”` : ""}
         </p>
         {incomingError && <p className="mt-1 text-xs text-destructive">{incomingError}</p>}
       </div>
@@ -130,7 +119,7 @@ export function SignerConversation() {
       {/* Outgoing sign capture */}
       <div className="s2s-card p-4">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          <p className="s2s-label text-muted-foreground">
             You sign
           </p>
           <button

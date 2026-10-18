@@ -4,6 +4,7 @@ import {
   AppSettings,
   DEFAULT_SETTINGS,
   SETTINGS_STORAGE_KEY,
+  sanitizeSettings,
 } from "@/app/lib/config/settings";
 
 // Shared settings singleton so every screen reads and reacts to the same live
@@ -19,7 +20,7 @@ function load(): void {
   loaded = true;
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (raw) current = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    if (raw) current = sanitizeSettings(JSON.parse(raw));
   } catch {
     /* keep defaults */
   }

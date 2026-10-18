@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { Globe, Volume2, Type, Contrast, Vibrate, User } from "lucide-react";
 import { AppShell } from "@/app/components/shell/AppShell";
 import { TopHeader } from "@/app/components/shell/TopHeader";
@@ -10,7 +11,6 @@ import { Slider } from "@/app/components/primitives/Slider";
 import { useSettings } from "@/app/hooks/useSettings";
 import {
   AVATARS,
-  AvatarId,
   SUPPORTED_LANGUAGES,
   VOICE_TONES,
   VoiceTone,
@@ -55,23 +55,28 @@ export default function SettingsPage() {
         <div className="mt-4 s2s-card p-5">
           <SettingHead
             icon={<User className="w-4 h-4" />}
-            title="Sign Avatar"
-            description="Choose the signer shown when the other person speaks."
+            title="Signer"
+            description="The character who signs what the other person says."
           />
-          <div className="mt-4 grid grid-cols-3 gap-2.5">
-            {AVATARS.map((a: AvatarId) => (
-              <button
-                key={a}
-                onClick={() => update({ avatar: a })}
-                className={`h-11 rounded-full text-sm font-semibold capitalize transition-all ${
-                  s.avatar === a
-                    ? "s2s-pill-primary"
-                    : "bg-white border border-border text-foreground hover:border-primary/30"
-                }`}
-              >
-                {a}
-              </button>
-            ))}
+          <div className="mt-4 grid grid-cols-3 gap-2.5" role="radiogroup" aria-label="Signer">
+            {AVATARS.map((a) => {
+              const chosen = s.avatar === a.id;
+              return (
+                <button
+                  key={a.id}
+                  role="radio"
+                  aria-checked={chosen}
+                  onClick={() => update({ avatar: a.id })}
+                  className={`relative rounded-[20px] p-1.5 pb-2.5 text-center s2s-press transition-shadow ${
+                    chosen ? "bg-white shadow-pill ring-2 ring-primary" : "bg-white/60 border border-white hover:bg-white"
+                  }`}
+                >
+                  <Image src={`/avatars/${a.id}.png`} alt="" width={240} height={240} className="w-full aspect-square rounded-[15px] object-cover bg-slate-100" />
+                  <span className={`mt-1.5 block text-[13px] font-bold ${chosen ? "text-primary" : "text-foreground"}`}>{a.label}</span>
+                  {chosen && <span aria-hidden="true" className="absolute inset-x-6 bottom-1 h-[3px] rounded-full s2s-ribbon" />}
+                </button>
+              );
+            })}
           </div>
         </div>
 

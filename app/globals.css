@@ -55,10 +55,6 @@
     --ink: 222 60% 13%;
     --ink-soft: 225 55% 22%;
 
-    /* Illustration accent (avatar background, etc.) */
-    --illustration-mint-from: 150 60% 75%;
-    --illustration-mint-to: 170 55% 65%;
-
     /* Stop / destructive gradient */
     --stop-from: 358 75% 55%;
     --stop-to: 0 75% 50%;
@@ -67,23 +63,37 @@
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-bright)));
     --gradient-ink: linear-gradient(135deg, hsl(var(--ink)), hsl(var(--ink-soft)));
     --gradient-stop: linear-gradient(135deg, hsl(var(--stop-from)), hsl(var(--stop-to)));
-    --gradient-illustration: linear-gradient(135deg, hsl(var(--illustration-mint-from)), hsl(var(--illustration-mint-to)));
-    --gradient-progress: linear-gradient(90deg, hsl(var(--primary-bright)), hsl(var(--primary)));
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(232 100% 99%));
-    --gradient-mesh: radial-gradient(at 20% 0%, hsl(217 91% 92% / 0.7) 0px, transparent 50%),
-                     radial-gradient(at 80% 100%, hsl(232 100% 92% / 0.6) 0px, transparent 50%);
 
     /* Shadows */
     --shadow-card: 0 4px 24px -4px hsl(224 76% 40% / 0.08), 0 1px 2px hsl(224 76% 40% / 0.04);
     --shadow-pill: 0 10px 30px -10px hsl(224 76% 40% / 0.45);
     --shadow-pill-soft: 0 8px 24px -8px hsl(217 91% 55% / 0.35);
-    --shadow-tab: 0 -8px 30px -10px hsl(224 76% 40% / 0.15);
 
     /* Motion */
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
     --radius: 1rem;
+
+    /* Brand ribbon: the colours of the logo's single continuous stroke,
+       in the order the stroke draws them (heart red, signal blue, ear amber). */
+    --ribbon-coral: 12 84% 68%;
+    --ribbon-red: 352 66% 49%;
+    --ribbon-violet: 272 37% 48%;
+    --ribbon-blue: 219 84% 62%;
+    --ribbon-indigo: 225 59% 41%;
+    --ribbon-amber: 28 85% 65%;
+    --gradient-ribbon: linear-gradient(90deg,
+      hsl(var(--ribbon-coral)) 0%, hsl(var(--ribbon-red)) 22%, hsl(var(--ribbon-violet)) 40%,
+      hsl(var(--ribbon-blue)) 58%, hsl(var(--ribbon-indigo)) 76%, hsl(var(--ribbon-amber)) 100%);
+
+    /* Glass panels */
+    --glass-fill: linear-gradient(180deg, hsl(0 0% 100% / 0.9), hsl(0 0% 100% / 0.74));
+    --glass-edge: hsl(0 0% 100% / 0.85);
+    --shadow-glass: inset 0 1px 0 hsl(0 0% 100% / 0.9),
+                    0 22px 44px -22px hsl(226 70% 28% / 0.28),
+                    0 2px 6px -2px hsl(226 70% 28% / 0.08);
+    --shadow-lift: 0 30px 60px -28px hsl(226 70% 28% / 0.4), 0 4px 12px -4px hsl(226 70% 28% / 0.12);
   }
 
   /* Accessibility: stronger text/border contrast when enabled in Settings. */
@@ -112,7 +122,10 @@
 
 @layer base {
   * { @apply border-border; }
-  html, body { @apply bg-background text-foreground; }
+  /* The base colour sits on the root only, so the fixed aurora (z-index -1)
+     paints above it rather than under the body's block background. */
+  html { @apply bg-background; }
+  body { @apply bg-transparent text-foreground; }
   body {
     font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
@@ -121,21 +134,55 @@
 }
 
 @layer components {
+  /* The app column. On phones it is the screen; on large screens it becomes a
+     framed device standing on the aurora backdrop. */
   .s2s-shell {
     @apply mx-auto min-h-screen w-full max-w-md relative;
-    background:
-      radial-gradient(at 0% 0%, hsl(217 91% 92% / 0.5) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsl(232 100% 92% / 0.6) 0px, transparent 60%),
-      hsl(var(--background));
+    background: hsl(var(--background) / 0.55);
+  }
+  @media (min-width: 1024px) {
+    .s2s-shell {
+      @apply min-h-0 shrink-0 overflow-y-auto overflow-x-hidden;
+      width: 420px;
+      height: min(900px, calc(100dvh - 48px));
+      border-radius: 44px;
+      border: 1px solid hsl(0 0% 100% / 0.8);
+      /* No backdrop blur here: the avatar canvas inside the frame repaints every
+         frame, and a blurred backdrop would be recomputed with it. */
+      background: linear-gradient(180deg, hsl(var(--background) / 0.9), hsl(var(--background) / 0.82));
+      box-shadow: inset 0 0 0 8px hsl(0 0% 100% / 0.35), var(--shadow-lift), 0 80px 120px -60px hsl(226 70% 25% / 0.45);
+      scrollbar-width: none;
+    }
+    .s2s-shell::-webkit-scrollbar { display: none; }
   }
   .s2s-shell-dark {
     background:
-      radial-gradient(at 50% 0%, hsl(217 60% 22% / 0.6) 0px, transparent 55%),
-      hsl(222 47% 8%);
+      radial-gradient(at 50% 0%, hsl(217 60% 22% / 0.85) 0px, transparent 55%),
+      hsl(222 47% 8% / 0.96);
   }
   .s2s-card {
-    @apply rounded-3xl bg-card text-card-foreground;
-    box-shadow: var(--shadow-card);
+    @apply rounded-3xl text-card-foreground;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-edge);
+    box-shadow: var(--shadow-glass);
+    backdrop-filter: blur(18px) saturate(1.4);
+  }
+  /* A thin line in the logo's gradient: active tabs, progress, focus. */
+  .s2s-ribbon { background: var(--gradient-ribbon); }
+  /* Tactile press feedback for tappable surfaces. */
+  .s2s-press {
+    transition: transform 180ms var(--ease-spring), box-shadow 220ms var(--ease-out);
+  }
+  .s2s-press:active { transform: scale(0.965); }
+  .s2s-lift { transition: transform 280ms var(--ease-out), box-shadow 280ms var(--ease-out); }
+  @media (hover: hover) {
+    .s2s-lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  }
+  /* Loading placeholder that sweeps a soft highlight. */
+  .s2s-shimmer {
+    background: linear-gradient(100deg, hsl(230 40% 92%) 30%, hsl(0 0% 100%) 50%, hsl(230 40% 92%) 70%);
+    background-size: 220% 100%;
+    animation: s2s-shimmer 1.6s linear infinite;
   }
   .s2s-pill-primary {
     @apply rounded-full text-primary-foreground font-semibold;
@@ -155,20 +202,15 @@
     background: var(--gradient-ink);
     color: white;
   }
-  .s2s-progress-fill {
-    background: var(--gradient-progress);
-  }
-  .s2s-pill-soft {
-    @apply rounded-full font-semibold;
-    background: hsl(var(--primary-soft));
-    color: hsl(var(--primary));
-  }
   .s2s-heading {
     @apply font-display font-extrabold tracking-tight text-foreground;
     letter-spacing: -0.02em;
   }
   .s2s-eyebrow {
-    @apply text-[11px] font-bold uppercase tracking-[0.18em] text-primary;
+    @apply text-[13px] font-semibold text-primary;
+  }
+  .s2s-label {
+    @apply text-[12px] font-semibold;
   }
 }
 
@@ -194,19 +236,43 @@
   70% { transform: scale(1.45); opacity: 0; }
   100% { transform: scale(1.45); opacity: 0; }
 }
-@keyframes s2s-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.04); }
+@keyframes s2s-shimmer {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
 }
-@keyframes s2s-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+@keyframes s2s-page-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes s2s-ribbon-flow {
+  from { background-position: 0% 50%; }
+  to { background-position: 200% 50%; }
+}
+.animate-page-in { animation: s2s-page-in 520ms var(--ease-out) both; }
+@keyframes s2s-burst {
+  0% { transform: translate(-50%, -50%) rotate(var(--r)) translateY(0) scale(0.4); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(var(--r)) translateY(calc(-1 * var(--d))) scale(1); opacity: 0; }
+}
+.s2s-burst-piece { position: absolute; left: 50%; top: 50%; border-radius: 3px; animation: s2s-burst 900ms var(--ease-out) forwards; }
+.animate-ribbon-flow { background-size: 200% 100%; animation: s2s-ribbon-flow 2.4s linear infinite; }
+
+/* Aurora backdrop: three clouds in the logo's colours with fine grain. It is
+   still: glass panels blur what lies behind them, and a moving backdrop would
+   force that blur to be recomputed on every frame. */
+.s2s-aurora { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: hsl(232 100% 97%); pointer-events: none; }
+.s2s-aurora::before, .s2s-aurora::after, .s2s-aurora > span {
+  content: ""; position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%; filter: blur(80px);
+}
+.s2s-aurora::before { left: -18vmax; top: -22vmax; background: hsl(var(--ribbon-blue) / 0.36); }
+.s2s-aurora::after { right: -20vmax; bottom: -26vmax; background: hsl(var(--ribbon-amber) / 0.3); }
+.s2s-aurora > span { right: 4vmax; top: -12vmax; width: 46vmax; height: 46vmax; background: hsl(var(--ribbon-coral) / 0.24); }
+.s2s-aurora > i {
+  position: absolute; inset: 0; opacity: 0.07; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 .animate-fade-up { animation: s2s-fade-up 600ms var(--ease-out) both; }
 .animate-pulse-dot { animation: s2s-pulse-dot 1.4s ease-in-out infinite; }
 .animate-scale-in { animation: s2s-scale-in 420ms var(--ease-spring) both; }
-.animate-breathe { animation: s2s-breathe 3s ease-in-out infinite; }
-.animate-float { animation: s2s-float 4s ease-in-out infinite; }
 
 /* Expanding ring behind an active record control. */
 .s2s-record-ring::before {
@@ -220,7 +286,13 @@
 }
 .s2s-record-ring-primary::before { background: hsl(var(--primary-bright)); }
 
+/* Visible keyboard focus everywhere. */
+:focus-visible { outline: 2px solid hsl(var(--primary-bright)); outline-offset: 3px; border-radius: 12px; }
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-up, .animate-scale-in, .animate-breathe, .animate-float,
-  .animate-pulse-dot, .s2s-record-ring::before { animation: none; }
+  .animate-fade-up, .animate-scale-in,
+  .animate-pulse-dot, .s2s-record-ring::before, .animate-page-in, .animate-ribbon-flow,
+  .s2s-shimmer, .s2s-burst-piece { animation: none; }
+  .s2s-burst-piece { display: none; }
+  .s2s-press:active, .s2s-lift:hover { transform: none; }
 }
