@@ -37,7 +37,7 @@ export default function CompanionPage() {
 
   return (
     <PageShell title="Companion" eyebrow="Sign along in a call" action={statusChip} dark className="gap-3">
-      <LiveAvatar clips={clips} avw={520} avh={520} className="flex-1 min-h-0 w-full rounded-[26px] bg-gradient-to-b from-slate-100 to-slate-200/70 border border-white/10 shadow-card" />
+      <LiveAvatar clips={clips} className="flex-1 min-h-0 w-full rounded-[26px] bg-gradient-to-b from-slate-100 to-slate-200/70 border border-white/10 shadow-card" />
 
       <div className="min-h-[2rem] text-center">
         {interim ? (

@@ -83,7 +83,7 @@ export default function PracticePage() {
       {/* stage */}
       <div className="relative w-full flex-1 min-h-0 rounded-[26px] overflow-hidden shadow-card bg-ink border border-white/10">
         <div className={`absolute inset-0 transition-opacity duration-300 ${phase === "watch" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-          <LiveAvatar clips={clips} avw={520} avh={520} className="w-full h-full bg-gradient-to-b from-slate-100 to-slate-200/70" />
+          <LiveAvatar clips={clips} className="w-full h-full bg-gradient-to-b from-slate-100 to-slate-200/70" />
         </div>
         <div className={`absolute inset-0 transition-opacity duration-300 ${phase !== "watch" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
           <video ref={recorder.videoRef} className="absolute inset-0 w-full h-full object-cover" autoPlay playsInline muted style={{ transform: "scaleX(-1)" }} />

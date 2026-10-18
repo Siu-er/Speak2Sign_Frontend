@@ -68,7 +68,7 @@ export default function LivePage() {
     <PageShell title="Live Sign" eyebrow="Say it, see it signed" className="gap-3">
       {/* avatar stage */}
       <div className="flex-1 min-h-0 flex flex-col">
-        <LiveAvatar clips={clips} avw={520} avh={520} className="w-full flex-1 min-h-0 rounded-[26px] shadow-card bg-gradient-to-b from-slate-100 to-slate-200/70 border border-white/60" />
+        <LiveAvatar clips={clips} className="w-full flex-1 min-h-0 rounded-[26px] shadow-card bg-gradient-to-b from-slate-100 to-slate-200/70 border border-white/60" />
         <div className="mt-2.5 min-h-[1.75rem] text-center">
           {interim ? (
             <span className="text-primary/70 text-[15px] italic">{interim}</span>

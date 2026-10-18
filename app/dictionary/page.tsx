@@ -51,7 +51,7 @@ export default function DictionaryPage() {
     <PageShell title="Dictionary" eyebrow="Look up any sign" className="gap-3">
       {/* avatar + current word */}
       <div className="rounded-[26px] bg-white/70 border border-white/60 shadow-card p-2.5 flex items-center gap-3">
-        <LiveAvatar clips={clips} avw={360} avh={360} className="w-32 h-32 rounded-2xl bg-gradient-to-b from-slate-100 to-slate-200/70 shrink-0" />
+        <LiveAvatar clips={clips} className="w-32 h-32 rounded-2xl bg-gradient-to-b from-slate-100 to-slate-200/70 shrink-0" />
         <div className="min-w-0">
           {current ? (
             <>

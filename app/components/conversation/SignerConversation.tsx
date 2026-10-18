@@ -116,7 +116,6 @@ export function SignerConversation() {
         <SiGMLDisplay
           sentences={sentences}
           currentSegment={{}}
-          avatar={settings.avatar}
         />
         <p className="mt-1.5 text-sm text-foreground min-h-[1.25rem]">
           {pendingText

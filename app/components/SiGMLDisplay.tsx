@@ -14,16 +14,15 @@ interface SentenceSegment {
 interface SiGMLDisplayProps {
   sentences: SentenceSegment[];
   currentSegment: Partial<SentenceSegment>;
-  avatar?: string;
 }
 
 /**
- * Renders the CWASA sign avatar inside an isolated iframe. CWASA and MediaPipe
+ * Renders the sign avatar inside an isolated iframe. CWASA and MediaPipe
  * are both non-modularized emscripten apps and corrupt each other's globals
  * when sharing one document, so the avatar lives in its own frame and receives
  * SiGML over postMessage.
  */
-export const SiGMLDisplay: React.FC<SiGMLDisplayProps> = ({ sentences, currentSegment, avatar = "luna" }) => {
+export const SiGMLDisplay: React.FC<SiGMLDisplayProps> = ({ sentences, currentSegment }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [ready, setReady] = useState(false);
   const playedRef = useRef(0);
@@ -79,14 +78,12 @@ export const SiGMLDisplay: React.FC<SiGMLDisplayProps> = ({ sentences, currentSe
   return (
     <Card className="p-3 bg-gradient-subtle border-2 border-accent/20 shadow-soft">
       <div className="space-y-2">
-        {/* Outer wrapper is shorter than the iframe so the avatar renders at
-            full size while its legs are clipped below the fold. */}
-        <div className="bg-muted/30 rounded-lg overflow-hidden h-[205px] relative">
+        <div className="bg-gradient-to-b from-slate-50 to-slate-200/70 rounded-lg overflow-hidden h-[205px] relative">
           <iframe
             ref={iframeRef}
-            src={`/cwasa-frame.html?avatar=${encodeURIComponent(avatar)}`}
+            src="/vrm-frame.html"
             title="Sign avatar"
-            className="absolute top-0 left-0 w-full h-[260px] border-0 bg-white"
+            className="absolute inset-0 w-full h-full border-0 bg-transparent"
           />
           {ready && sentences.length > 0 && (
             <button

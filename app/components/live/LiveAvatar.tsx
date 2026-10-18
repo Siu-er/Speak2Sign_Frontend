@@ -9,18 +9,15 @@ export interface AvatarClip {
 
 interface Props {
   clips: AvatarClip[];
-  avatar?: string;
   className?: string;
-  avw?: number;
-  avh?: number;
 }
 
 /**
- * Full-size CWASA sign avatar. Plays each newly appended clip's SiGML by
+ * Full-size sign avatar. Plays each newly appended clip's SiGML by
  * posting it into the isolated avatar iframe, using the same ready handshake as
  * the conversation view.
  */
-export function LiveAvatar({ clips, avatar = "luna", className = "", avw = 620, avh = 560 }: Props) {
+export function LiveAvatar({ clips, className = "" }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [ready, setReady] = useState(false);
   const playedRef = useRef(0);
@@ -58,7 +55,7 @@ export function LiveAvatar({ clips, avatar = "luna", className = "", avw = 620, 
     <div className={`relative overflow-hidden ${className}`}>
       <iframe
         ref={iframeRef}
-        src={`/cwasa-frame.html?avatar=${encodeURIComponent(avatar)}&avw=${avw}&avh=${avh}`}
+        src="/vrm-frame.html"
         title="Sign avatar"
         className="absolute inset-0 w-full h-full border-0 bg-transparent"
       />

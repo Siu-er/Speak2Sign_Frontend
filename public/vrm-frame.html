@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Avatar</title>
+  <link rel="stylesheet" href="https://pub-233bfe19474b4be58fb4a245b6800823.r2.dev/jas/loc2025/cwa/cwasa.css" />
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: transparent; overflow: hidden; }
+    canvas.vrm { display: block; width: 100%; height: 100%; }
+    /* JASigning computes the signing motion; its own avatar stays off screen. */
+    #motion { position: fixed; left: -4000px; top: 0; width: 160px; height: 160px; }
+    #motion .CWASAAvatar { width: 160px; height: 160px; }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/",
+        "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.5.5/lib/three-vrm.module.min.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="motion"><div class="CWASAAvatar av0"></div></div>
+
+  <script src="https://pub-233bfe19474b4be58fb4a245b6800823.r2.dev/jas/loc2025/cwa/allcsa.js"></script>
+  <script>
+    // Motion source. Each time JASigning poses its skeleton, the global position
+    // of every bone is published for the VRM renderer. The engine itself is not
+    // modified: Character.prototype.setFrame is wrapped from outside.
+    (function () {
+      var env = window.getCWAEnv();
+      var Character = env.get("Character");
+      var FourCC = env.get("FourCC");
+      // rest: the idle pose before any signing; signing/changedAt: the engine's
+      // activity state, used to ease into and out of signs.
+      var motion = window.s2sMotion = { names: null, prev: null, curr: null, rest: null, signing: false, played: false, changedAt: 0 };
+
+      function position(trx) {
+        var t = trx._t ? (trx._t.xyz || trx._t) : trx.t || trx[0];
+        return [t[0], t[1], t[2]];
+      }
+
+      var setFrame = Character.prototype.setFrame;
+      Character.prototype.setFrame = function () {
+        var result = setFrame.apply(this, arguments);
+        var bones = this.skeleton.getBones();
+        if (!motion.names) {
+          motion.names = bones.map(function (b) { return FourCC.fourCCStr(b.fourCCName); });
+        }
+        motion.prev = motion.curr;
+        motion.curr = { time: performance.now(), pos: bones.map(function (b) { return position(b.getGlobalTRX()); }) };
+        if (!motion.played) motion.rest = motion.curr.pos;
+        return result;
+      };
+
+      var jasBase = "https://pub-233bfe19474b4be58fb4a245b6800823.r2.dev/jas/loc2025/";
+      var queue = [];
+      var engineReady = false;
+
+      function flush() {
+        if (!engineReady || !window.s2sRendererReady) return;
+        while (queue.length) window.CWASA.playSiGMLText(queue.shift());
+      }
+      window.s2sFlush = flush;
+
+      CWASA.addHook("animactive", function () { motion.signing = true; motion.played = true; motion.changedAt = performance.now(); });
+      CWASA.addHook("animidle", function () { if (motion.signing) { motion.signing = false; motion.changedAt = performance.now(); } });
+      CWASA.addHook("avatarloaded", function () { engineReady = true; window.s2sAnnounce(); flush(); });
+      CWASA.init({ avsmotion: ["luna"], avSettings: { avList: "avsmotion", initAv: "luna" }, jasBase: jasBase, cwaBase: jasBase + "cwa/" });
+
+      window.s2sEngineReady = function () { return engineReady; };
+      window.addEventListener("message", function (ev) {
+        var data = ev.data || {};
+        if (data.type === "s2s-play" && typeof data.sigml === "string" && data.sigml.trim()) {
+          queue.push(data.sigml);
+          flush();
+        }
+      });
+
+      var announced = false;
+      window.s2sAnnounce = function () {
+        if (announced || !engineReady || !window.s2sRendererReady) return;
+        announced = true;
+        parent.postMessage({ type: "s2s-avatar-ready" }, "*");
+      };
+    })();
+  </script>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
+
+    const MODEL = new URLSearchParams(location.search).get("model") || "shino";
+    // JASigning publishes frames at its animation rate; rendering one frame
+    // behind lets every displayed pose interpolate between two real frames.
+    const FRAME_DELAY_MS = 40;
+    // JASigning holds the last posture of a sentence; the avatar eases back to
+    // rest when the engine goes idle and out of rest when a sign begins.
+    const SETTLE_MS = 700;
+    const START_MS = 300;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // Avatar boxes are small; rendering at no less than twice the CSS size keeps
+    // fingers and hair edges clean on standard-density screens.
+    renderer.setPixelRatio(Math.max(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.domElement.className = "vrm";
+    document.body.append(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(24, 1, 0.1, 20);
+    const key = new THREE.DirectionalLight(0xffffff, Math.PI * 0.9);
+    key.position.set(0.6, 1.4, 2.2);
+    scene.add(key);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+
+    const loader = new GLTFLoader();
+    loader.register((parser) => new VRMLoaderPlugin(parser));
+    const vrm = (await loader.loadAsync(`/avatars/${MODEL}.vrm`)).userData.vrm;
+    VRMUtils.removeUnnecessaryVertices(vrm.scene);
+    VRMUtils.combineSkeletons(vrm.scene);
+    VRMUtils.rotateVRM0(vrm);
+
+    // VRoid exports its texture samplers without mipmapping, so 2048 px textures
+    // drawn into a small box alias into sparkle. Mipmaps plus anisotropic
+    // filtering fix the minification; alpha-to-coverage antialiases the edges
+    // of alpha-tested hair and clothing through the renderer's MSAA.
+    const maxAniso = renderer.capabilities.getMaxAnisotropy();
+    vrm.scene.traverse((obj) => {
+      for (const mat of [].concat(obj.material || [])) {
+        for (const value of Object.values(mat)) {
+          if (value && value.isTexture) {
+            value.generateMipmaps = true;
+            value.minFilter = THREE.LinearMipmapLinearFilter;
+            value.anisotropy = maxAniso;
+            value.needsUpdate = true;
+          }
+        }
+        if (mat.alphaTest > 0) mat.alphaToCoverage = true;
+        mat.needsUpdate = true;
+      }
+    });
+    scene.add(vrm.scene);
+    vrm.scene.updateMatrixWorld(true);
+
+    const H = vrm.humanoid;
+    const node = (n) => H.getNormalizedBoneNode(n);
+    const restPos = {}, restQ = {};
+    for (const n of Object.keys(H.humanBones)) {
+      const nd = node(n);
+      if (nd) {
+        restPos[n] = nd.getWorldPosition(new THREE.Vector3());
+        restQ[n] = nd.getWorldQuaternion(new THREE.Quaternion());
+      }
+    }
+    const has = (n) => restPos[n] !== undefined;
+    const torsoTop = has("upperChest") ? "upperChest" : "chest";
+    const v = (a, b) => restPos[b].clone().sub(restPos[a]);
+    const wp = (n) => node(n).getWorldPosition(new THREE.Vector3());
+
+    const rawHead = H.getRawBoneNode("head");
+    const lookOffset = vrm.lookAt.offsetFromHeadBone.clone();
+    function eyeMid() {
+      if (has("leftEye")) return wp("leftEye").add(wp("rightEye")).multiplyScalar(0.5);
+      return rawHead.localToWorld(lookOffset.clone());
+    }
+    const restEyeMid = eyeMid();
+    const restEyeLine = has("leftEye") ? v("rightEye", "leftEye") : v("rightUpperArm", "leftUpperArm");
+
+    // Upper-body framing from the model's own proportions: from the waist to the
+    // signing space above the head, wide enough for arms reaching sideways.
+    function frameCamera() {
+      const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
+      if (!w || !h) return;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      const top = restPos.head.y + 2.2 * restPos.head.distanceTo(restPos.neck) + 0.12;
+      const bottom = restPos.hips.y + 0.05;
+      const halfWidth = 1.35 * restPos.leftUpperArm.distanceTo(restPos.rightUpperArm);
+      const halfV = THREE.MathUtils.degToRad(camera.fov / 2);
+      const needV = (top - bottom) / 2 / Math.tan(halfV);
+      const needH = halfWidth / (Math.tan(halfV) * camera.aspect);
+      const centreY = (top + bottom) / 2;
+      camera.position.set(0, centreY, Math.max(needV, needH));
+      camera.lookAt(0, centreY, 0);
+      camera.updateProjectionMatrix();
+    }
+    new ResizeObserver(frameCamera).observe(renderer.domElement);
+    frameCamera();
+
+    // ---------- retargeting ----------
+    function basis(primary, secondary) {
+      const a = primary.clone().normalize();
+      const b = secondary.clone().sub(a.clone().multiplyScalar(a.dot(secondary))).normalize();
+      return new THREE.Matrix4().makeBasis(a, b, new THREE.Vector3().crossVectors(a, b));
+    }
+    function frameRotation(jPrimary, jSecondary, vPrimary, vSecondary) {
+      const m = basis(jPrimary, jSecondary).multiply(basis(vPrimary, vSecondary).transpose());
+      return new THREE.Quaternion().setFromRotationMatrix(m);
+    }
+    function setWorld(name, worldQ) {
+      const nd = node(name);
+      const parentQ = nd.parent.getWorldQuaternion(new THREE.Quaternion());
+      nd.quaternion.copy(parentQ.invert().multiply(worldQ));
+      nd.updateMatrixWorld(true);
+    }
+    function setFrameRot(name, rot) {
+      if (has(name)) setWorld(name, rot.multiply(restQ[name]));
+    }
+    const parentOf = {};
+    function parentBone(name) {
+      if (parentOf[name]) return parentOf[name];
+      for (let p = node(name).parent; p; p = p.parent) {
+        const hit = Object.keys(restPos).find((n) => node(n) === p);
+        if (hit) return (parentOf[name] = hit);
+      }
+      throw new Error(`No humanoid parent for ${name}`);
+    }
+    // Swing-only aim; returns the bone's own axis in its local frame.
+    function aim(name, childName, targetDir) {
+      const nd = node(name);
+      const parentQ = nd.parent.getWorldQuaternion(new THREE.Quaternion());
+      const parentDelta = parentQ.multiply(restQ[parentBone(name)].clone().invert());
+      const restDir = restPos[childName].clone().sub(restPos[name]).normalize();
+      const swing = new THREE.Quaternion().setFromUnitVectors(restDir.clone().applyQuaternion(parentDelta), targetDir.clone().normalize());
+      setWorld(name, swing.multiply(parentDelta).multiply(restQ[name]));
+      return restDir.applyQuaternion(restQ[name].clone().invert());
+    }
+
+    const SIDES = [
+      { s: "left", J: "L", tips: { Index: "EN05", Middle: "EN04", Ring: "EN03", Little: "EN02", Thumb: "EN06" } },
+      { s: "right", J: "R", tips: { Index: "EN08", Middle: "EN09", Ring: "EN10", Little: "EN11", Thumb: "ENO7" } },
+    ];
+    const FINGERS = { Index: "IF", Middle: "MF", Ring: "RF", Little: "PF" };
+    for (const { s } of SIDES) {
+      for (const F of [...Object.keys(FINGERS), "Thumb"]) {
+        const mid = F === "Thumb" ? `${s}ThumbProximal` : `${s}${F}Intermediate`;
+        restPos[`${s}${F}Tip`] = restPos[`${s}${F}Distal`].clone().add(v(mid, `${s}${F}Distal`));
+      }
+    }
+
+    function applyFrame(jp) {
+      const lr = (a, b) => jp(a).sub(jp(b));
+      const jShoulders = lr("LUPA", "RUPA");
+      const vShoulders = v("rightUpperArm", "leftUpperArm");
+      setFrameRot("hips", frameRotation(lr("SPI3", "ROOT"), lr("LTHG", "RTHG"), v("hips", torsoTop), v("rightUpperLeg", "leftUpperLeg")));
+      setFrameRot("spine", frameRotation(lr("SPI3", "SPI1"), jShoulders, v("spine", torsoTop), vShoulders));
+      setFrameRot("chest", frameRotation(lr("NEC1", "SPI2"), jShoulders, v("chest", "neck"), vShoulders));
+      setFrameRot("upperChest", frameRotation(lr("NEC1", "SPI3"), jShoulders, v(torsoTop, "neck"), vShoulders));
+      setFrameRot("neck", frameRotation(lr("HEAD", "NEC1"), lr("LEYE", "REYE"), v("neck", "head"), restEyeLine));
+      const jEyes = jp("LEYE").add(jp("REYE")).multiplyScalar(0.5);
+      setFrameRot("head", frameRotation(jEyes.clone().sub(jp("HEAD")), lr("LEYE", "REYE"), restEyeMid.clone().sub(restPos.head), restEyeLine));
+
+      // Wrist targets are carried across body proportions relative to the eyes
+      // and to the shoulders, then reached with two-bone IK.
+      const vEyeMid = eyeMid();
+      const jShoulderMid = jp("LUPA").add(jp("RUPA")).multiplyScalar(0.5);
+      const vShoulderMid = wp("leftUpperArm").add(wp("rightUpperArm")).multiplyScalar(0.5);
+      const headScale = vEyeMid.distanceTo(wp("neck")) / jEyes.distanceTo(jp("NEC1"));
+      const torsoScale = wp("leftUpperArm").distanceTo(wp("rightUpperArm")) / jp("LUPA").distanceTo(jp("RUPA"));
+
+      for (const { s, J, tips } of SIDES) {
+        if (has(`${s}Shoulder`)) aim(`${s}Shoulder`, `${s}UpperArm`, lr(`${J}UPA`, `${J}CLR`));
+
+        const jw = jp(`${J}WRI`);
+        const wHead = 1 / Math.max(jw.distanceTo(jEyes), 1e-3) ** 2;
+        const wTorso = 1 / Math.max(jw.distanceTo(jShoulderMid), 1e-3) ** 2;
+        const viaHead = vEyeMid.clone().add(jw.clone().sub(jEyes).multiplyScalar(headScale));
+        const viaTorso = vShoulderMid.clone().add(jw.clone().sub(jShoulderMid).multiplyScalar(torsoScale));
+        const target = viaHead.multiplyScalar(wHead).add(viaTorso.multiplyScalar(wTorso)).divideScalar(wHead + wTorso);
+
+        const S = wp(`${s}UpperArm`);
+        const a = v(`${s}UpperArm`, `${s}LowerArm`).length(), b = v(`${s}LowerArm`, `${s}Hand`).length();
+        const toT = target.clone().sub(S);
+        const d = Math.min(toT.length(), a + b - 1e-4);
+        const dir = toT.normalize();
+        const jPole = lr(`${J}LRA`, `${J}UPA`);
+        const jReach = lr(`${J}WRI`, `${J}UPA`).normalize();
+        const pole = jPole.sub(jReach.multiplyScalar(jPole.dot(jReach))).normalize();
+        const cosA = (a * a + d * d - b * b) / (2 * a * d);
+        const elbow = S.clone().add(dir.clone().multiplyScalar(a * cosA)).add(pole.multiplyScalar(a * Math.sqrt(Math.max(0, 1 - cosA * cosA))));
+        aim(`${s}UpperArm`, `${s}LowerArm`, elbow.clone().sub(S));
+        const forearmAxis = aim(`${s}LowerArm`, `${s}Hand`, S.clone().add(dir.multiplyScalar(d)).sub(elbow));
+
+        const handW = frameRotation(lr(`${J}MF1`, `${J}WRI`), lr(`${J}IF1`, `${J}PF1`),
+          v(`${s}Hand`, `${s}MiddleProximal`), v(`${s}LittleProximal`, `${s}IndexProximal`)).multiply(restQ[`${s}Hand`]);
+        // Half of the forearm twist goes to the forearm so the wrist does not candy-wrap.
+        const fore = node(`${s}LowerArm`);
+        const foreW = fore.getWorldQuaternion(new THREE.Quaternion());
+        const rel = foreW.clone().invert().multiply(handW);
+        const proj = new THREE.Vector3(rel.x, rel.y, rel.z).projectOnVector(forearmAxis);
+        const twist = new THREE.Quaternion(proj.x, proj.y, proj.z, rel.w).normalize();
+        setWorld(`${s}LowerArm`, foreW.multiply(new THREE.Quaternion().slerp(twist, 0.5)));
+        setWorld(`${s}Hand`, handW);
+
+        for (const [F, code] of Object.entries(FINGERS)) {
+          aim(`${s}${F}Proximal`, `${s}${F}Intermediate`, lr(`${J}${code}2`, `${J}${code}1`));
+          aim(`${s}${F}Intermediate`, `${s}${F}Distal`, lr(`${J}${code}3`, `${J}${code}2`));
+          aim(`${s}${F}Distal`, `${s}${F}Tip`, lr(tips[F], `${J}${code}3`));
+        }
+        if (has(`${s}ThumbMetacarpal`)) aim(`${s}ThumbMetacarpal`, `${s}ThumbProximal`, lr(`${J}TH2`, `${J}TH1`));
+        aim(`${s}ThumbProximal`, `${s}ThumbDistal`, lr(`${J}TH3`, `${J}TH2`));
+        aim(`${s}ThumbDistal`, `${s}ThumbTip`, lr(tips.Thumb, `${J}TH3`));
+      }
+    }
+
+    // ---------- playback ----------
+    const motion = window.s2sMotion;
+    let index = null;
+    function poseAt(now) {
+      const { prev, curr, names } = motion;
+      if (!curr || !names) return null;
+      index ??= Object.fromEntries(names.map((n, i) => [n, i]));
+      const t = now - FRAME_DELAY_MS;
+      const alpha = prev ? THREE.MathUtils.clamp((t - prev.time) / Math.max(curr.time - prev.time, 1), 0, 1) : 1;
+      const since = now - motion.changedAt;
+      const ease = (x) => x * x * (3 - 2 * x);
+      const restWeight = !motion.played || !motion.rest ? 0
+        : motion.signing ? 1 - ease(THREE.MathUtils.clamp(since / START_MS, 0, 1))
+        : ease(THREE.MathUtils.clamp(since / SETTLE_MS, 0, 1));
+      return (name) => {
+        const i = index[name];
+        const c = curr.pos[i];
+        const p = prev ? prev.pos[i] : c;
+        const live = new THREE.Vector3(p[0] + (c[0] - p[0]) * alpha, p[1] + (c[1] - p[1]) * alpha, p[2] + (c[2] - p[2]) * alpha);
+        if (restWeight === 0) return live;
+        const r = motion.rest[i];
+        return live.lerp(new THREE.Vector3(r[0], r[1], r[2]), restWeight);
+      };
+    }
+
+    // Natural blinking: a short close-open every few seconds.
+    let nextBlink = performance.now() + 2500;
+    function blinkWeight(now) {
+      const since = now - nextBlink;
+      if (since < 0) return 0;
+      if (since > 160) { nextBlink = now + 2500 + Math.random() * 3500; return 0; }
+      return Math.sin((since / 160) * Math.PI);
+    }
+
+    const clock = new THREE.Clock();
+    renderer.setAnimationLoop(() => {
+      const now = performance.now();
+      const jp = poseAt(now);
+      if (jp) applyFrame(jp);
+      vrm.expressionManager?.setValue("blink", blinkWeight(now));
+      vrm.update(clock.getDelta());
+      renderer.render(scene, camera);
+    });
+
+    window.s2sRendererReady = true;
+    window.s2sAnnounce();
+    window.s2sFlush();
+  </script>
+</body>
+</html>
