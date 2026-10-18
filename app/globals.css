@@ -134,26 +134,18 @@
 }
 
 @layer components {
-  /* The app column. On phones it is the screen; on large screens it becomes a
-     framed device standing on the aurora backdrop. */
+  /* The app column. On phones it is the whole screen; on desktop it is the wide
+     content area beside the fixed sidebar. */
   .s2s-shell {
     @apply mx-auto min-h-screen w-full max-w-md relative;
     background: hsl(var(--background) / 0.55);
   }
   @media (min-width: 1024px) {
     .s2s-shell {
-      @apply min-h-0 shrink-0 overflow-y-auto overflow-x-hidden;
-      width: 420px;
-      height: min(900px, calc(100dvh - 48px));
-      border-radius: 44px;
-      border: 1px solid hsl(0 0% 100% / 0.8);
-      /* No backdrop blur here: the avatar canvas inside the frame repaints every
-         frame, and a blurred backdrop would be recomputed with it. */
-      background: linear-gradient(180deg, hsl(var(--background) / 0.9), hsl(var(--background) / 0.82));
-      box-shadow: inset 0 0 0 8px hsl(0 0% 100% / 0.35), var(--shadow-lift), 0 80px 120px -60px hsl(226 70% 25% / 0.45);
-      scrollbar-width: none;
+      max-width: none;
+      background: transparent;
     }
-    .s2s-shell::-webkit-scrollbar { display: none; }
+    body:has(.s2s-sidebar) .s2s-shell { padding-left: 264px; }
   }
   .s2s-shell-dark {
     background:

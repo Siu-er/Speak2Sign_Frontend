@@ -79,19 +79,20 @@ export default function PracticePage() {
   return (
     <PageShell title="Practice" subtitle="Copy the sign" action={scoreChip} className="gap-3 items-center">
       {/* target */}
-      <div className="text-center">
+      <div className="text-center lg:-mt-2">
         <p className="s2s-label text-muted-foreground">Sign this word</p>
-        <p className="font-display font-extrabold text-[34px] text-primary capitalize leading-tight">{target}</p>
+        <p className="font-display font-extrabold text-[34px] lg:text-[48px] text-primary capitalize leading-tight">{target}</p>
         {streak >= 2 && <p className="text-[12px] font-bold text-amber-600">{streak} in a row</p>}
         {demoError && <p className="mt-1 inline-flex items-center gap-1.5 text-[12px] font-semibold text-destructive"><TriangleAlert className="w-3.5 h-3.5" /> {demoError}</p>}
       </div>
 
-      {/* stage */}
-      <div className={`relative w-full flex-1 min-h-[340px] rounded-[28px] overflow-hidden shadow-lift ${phase === "watch" ? "" : "bg-ink"}`}>
-        <div className={`absolute inset-0 transition-opacity duration-300 ${phase === "watch" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+      {/* Phones show the signer, then the camera, in one stage; desktop shows them side by side. */}
+      <div className={`relative w-full flex-1 min-h-[340px] rounded-[28px] overflow-hidden shadow-lift lg:grid lg:grid-cols-2 lg:gap-6 lg:overflow-visible lg:rounded-none lg:shadow-none lg:bg-transparent lg:min-h-[480px] lg:h-[calc(100vh-330px)] ${phase === "watch" ? "" : "bg-ink"}`}>
+        <div className={`absolute inset-0 transition-opacity duration-300 lg:static lg:opacity-100 lg:pointer-events-auto lg:rounded-[28px] lg:overflow-hidden lg:shadow-lift ${phase === "watch" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
           <SignAvatar clips={clips} variant="stage" showGlosses className="w-full h-full rounded-none" />
+          <span className="hidden lg:block absolute top-4 left-4 rounded-full bg-white px-3 py-1 text-[12px] font-bold text-foreground shadow-pill-soft">Watch</span>
         </div>
-        <div className={`absolute inset-0 transition-opacity duration-300 ${phase !== "watch" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+        <div className={`absolute inset-0 transition-opacity duration-300 lg:relative lg:opacity-100 lg:pointer-events-auto lg:rounded-[28px] lg:overflow-hidden lg:bg-ink lg:shadow-lift ${phase !== "watch" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
           <video ref={recorder.videoRef} className="absolute inset-0 w-full h-full object-cover" autoPlay playsInline muted style={{ transform: "scaleX(-1)" }} />
           <canvas ref={overlayRef} className="absolute inset-0 w-full h-full object-cover pointer-events-none" style={{ transform: "scaleX(-1)" }} />
           {recorder.recording && (
@@ -99,7 +100,7 @@ export default function PracticePage() {
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Recording
             </div>
           )}
-        </div>
+          <span className="hidden lg:block absolute top-4 left-4 rounded-full bg-white/15 px-3 py-1 text-[12px] font-bold text-white">Your turn</span>
         {phase === "result" && (
           <div className={`absolute inset-0 grid place-items-center backdrop-blur-sm ${correct ? "bg-emerald-500/30" : "bg-ink/45"}`}>
             {correct && <Celebration />}
@@ -112,10 +113,11 @@ export default function PracticePage() {
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* controls */}
-      <div className="w-full">
+      <div className="w-full lg:max-w-xl">
         {phase === "watch" && (
           <div className="flex gap-2.5">
             <button onClick={() => demo(target)} className="shrink-0 w-14 h-14 rounded-full grid place-items-center bg-white/85 border border-primary/10 text-foreground shadow-pill-soft" title="Watch again">

@@ -42,7 +42,7 @@ export default function ConversationPage() {
     return (
       <AppShell showNav={false}>
         <PageHeader backHref="/" />
-        <main className="flex-1 px-6 pb-10 flex flex-col items-center justify-center text-center">
+        <main className="flex-1 px-6 pb-10 flex flex-col items-center justify-center text-center lg:max-w-md lg:mx-auto lg:w-full">
           <div className="w-20 h-20 rounded-full p-[3px] s2s-ribbon">
             <div className="w-full h-full rounded-full bg-white grid place-items-center text-primary">
               <Link2 className="w-9 h-9" />
@@ -63,8 +63,9 @@ export default function ConversationPage() {
 
   return (
     <AppShell showNav={false}>
-      <header className="px-6 pt-5 pb-2 flex items-center justify-between">
+      <header className="px-6 pt-5 pb-2 flex items-center justify-between lg:px-12 lg:pt-10 lg:pb-6">
         <div className="flex items-center gap-2 min-w-0">
+          <h1 className="hidden lg:block s2s-heading text-[34px] mr-3">Conversation</h1>
           <Chip tone="neutral" size="sm">Room {room.roomId}</Chip>
           <Chip tone={room.peerConnected ? "success" : "amber"} size="sm">
             {room.peerConnected ? "Connected" : "Waiting"}
@@ -94,7 +95,7 @@ export default function ConversationPage() {
         </div>
       )}
 
-      <main className="flex-1 px-6 pb-4">
+      <main className="flex-1 px-6 pb-4 lg:px-12 lg:pb-10">
         {room.role === "speaker" ? <SpeakerConversation /> : <SignerConversation />}
       </main>
     </AppShell>

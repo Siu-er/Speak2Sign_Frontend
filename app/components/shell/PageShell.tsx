@@ -20,7 +20,7 @@ export function PageShell({ title, subtitle, action, children, className = "", d
   return (
     <div className={`s2s-shell flex flex-col ${dark ? "s2s-shell-dark" : ""}`}>
       <PageHeader backHref="/" title={title} subtitle={subtitle} action={action} dark={dark} />
-      <main className={`flex-1 flex flex-col min-h-0 px-5 pb-6 ${className}`}>{children}</main>
+      <main className={`flex-1 flex flex-col min-h-0 px-5 pb-6 lg:px-12 lg:pb-10 ${className}`}>{children}</main>
     </div>
   );
 }

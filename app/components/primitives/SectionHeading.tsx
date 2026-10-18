@@ -15,10 +15,10 @@ export function SectionHeading({ eyebrow, title, description, trailing, classNam
         <div className="min-w-0">
           {eyebrow && <p className="s2s-eyebrow mb-2">{eyebrow}</p>}
           {title && (
-            <h2 className="s2s-heading text-[34px] leading-tight">{title}</h2>
+            <h1 className="s2s-heading text-[34px] leading-tight">{title}</h1>
           )}
           {description && (
-            <p className="mt-2 text-muted-foreground text-sm leading-relaxed">
+            <p className="mt-2 text-muted-foreground text-sm leading-relaxed lg:text-[15px]">
               {description}
             </p>
           )}

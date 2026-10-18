@@ -100,7 +100,7 @@ export function SignerConversation() {
   }, [onMessage, record]);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
       {/* Incoming speech as avatar */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
@@ -109,7 +109,7 @@ export function SignerConversation() {
           </p>
           {busy && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
         </div>
-        <SignAvatar clips={clips} variant="compact" showGlosses replayable className="h-[240px]" />
+        <SignAvatar clips={clips} variant="compact" showGlosses replayable className="h-[240px] lg:h-[460px]" />
         <p className="mt-2 text-[15px] font-semibold text-foreground min-h-[1.25rem] leading-snug">
           {pendingText ? `“${pendingText}”` : lastText ? `“${lastText}”` : ""}
         </p>
@@ -133,7 +133,7 @@ export function SignerConversation() {
             {settings.showLandmarks ? "Landmarks on" : "Landmarks off"}
           </button>
         </div>
-        <div className="relative rounded-2xl overflow-hidden bg-ink h-[215px] shadow-card">
+        <div className="relative rounded-2xl overflow-hidden bg-ink h-[215px] lg:h-[340px] shadow-card">
           <video
             ref={recorder.videoRef}
             className="absolute inset-0 w-full h-full object-cover"

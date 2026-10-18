@@ -22,14 +22,15 @@ export default function SettingsPage() {
   return (
     <AppShell>
       <TopHeader />
-      <main className="px-6 flex-1 pb-6">
+      <main className="px-6 flex-1 pb-6 lg:px-12 lg:pt-10 lg:pb-10 lg:columns-2 lg:gap-6">
         <SectionHeading
+          className="[column-span:all] lg:mb-6"
           title="Settings"
           description="Customize your experience for maximum clarity and comfort."
         />
 
         {/* Language */}
-        <div className="mt-6 s2s-card p-5">
+        <div className="mt-4 s2s-card p-5 lg:mt-0 lg:mb-6 break-inside-avoid">
           <SettingHead
             icon={<Globe className="w-4 h-4" />}
             title="Language"
@@ -52,7 +53,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Avatar */}
-        <div className="mt-4 s2s-card p-5">
+        <div className="mt-4 s2s-card p-5 lg:mt-0 lg:mb-6 break-inside-avoid">
           <SettingHead
             icon={<User className="w-4 h-4" />}
             title="Signer"
@@ -81,7 +82,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Voice Options */}
-        <div className="mt-4 s2s-card p-5">
+        <div className="mt-4 s2s-card p-5 lg:mt-0 lg:mb-6 break-inside-avoid">
           <SettingHead
             icon={<Volume2 className="w-4 h-4" />}
             title="Voice Options"
@@ -126,7 +127,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Accessibility */}
-        <div className="mt-4 s2s-card p-5">
+        <div className="mt-4 s2s-card p-5 lg:mt-0 lg:mb-6 break-inside-avoid">
           <h3 className="font-display font-extrabold text-foreground text-lg">Accessibility Features</h3>
 
           <div className="mt-4 s2s-card p-4 shadow-none border border-border bg-background-deep/30">

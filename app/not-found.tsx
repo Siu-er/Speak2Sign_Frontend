@@ -5,7 +5,7 @@ import { S2SLogo } from "@/app/components/shell/S2SLogo";
 export default function NotFound() {
   return (
     <div className="s2s-shell flex flex-col px-6 pt-6 pb-10">
-      <S2SLogo />
+      <div className="lg:hidden"><S2SLogo /></div>
       <main className="flex-1 flex flex-col items-center justify-center text-center">
         <div className="w-20 h-20 rounded-full p-[3px] s2s-ribbon">
           <div className="w-full h-full rounded-full bg-white grid place-items-center text-primary">

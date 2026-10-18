@@ -16,7 +16,7 @@ export function BottomNav() {
   const activeIndex = TABS.findIndex((t) => t.match(pathname));
 
   return (
-    <nav className="sticky bottom-0 z-30 px-4 pb-4 pt-2">
+    <nav className="sticky bottom-0 z-30 px-4 pb-4 pt-2 lg:hidden">
       <div className="relative s2s-card rounded-[26px] px-2 py-2 grid grid-cols-3">
         {activeIndex >= 0 && (
           // Sliding highlight under the active tab, with the brand ribbon beneath it.

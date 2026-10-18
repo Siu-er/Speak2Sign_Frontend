@@ -60,25 +60,10 @@ export default function OnboardingPage() {
     router.replace("/");
   };
 
-  return (
-    <div className="s2s-shell flex flex-col px-6 pt-6 pb-8">
-      <div className="flex items-center justify-between">
-        <S2SLogo />
-        <button onClick={finish} className="text-sm font-semibold text-muted-foreground hover:text-foreground">
-          Skip
-        </button>
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center py-6">
-        <SignAvatar clips={clips} variant="stage" showGlosses className="w-full max-w-[300px] h-[340px] shadow-lift" />
-        {error && <p className="mt-2 text-center text-[12px] font-semibold text-destructive">The signer could not load: {error}</p>}
-
-        <div key={index} className="animate-fade-up">
-          <h1 className="mt-8 s2s-heading text-[32px] leading-[1.08] text-center">{slide.heading}</h1>
-          <p className="mt-3 text-center text-muted-foreground text-[15px] leading-relaxed max-w-[32ch] mx-auto">{slide.body}</p>
-        </div>
-      </div>
-
+  // The continue button and progress dots: at the foot of the screen on phones,
+  // under the slide text on desktop.
+  const controls = (
+    <>
       <button
         onClick={last ? finish : () => setIndex((i) => i + 1)}
         className="s2s-pill-primary h-14 w-full inline-flex items-center justify-center gap-2 text-base s2s-press"
@@ -86,8 +71,7 @@ export default function OnboardingPage() {
         {slide.cta}
         <ArrowRight className="w-5 h-5" />
       </button>
-
-      <div className="mt-6 flex items-center justify-center gap-2" aria-label={`Step ${index + 1} of ${SLIDES.length}`}>
+      <div className="mt-6 flex items-center justify-center lg:justify-start gap-2" aria-label={`Step ${index + 1} of ${SLIDES.length}`}>
         {SLIDES.map((_, i) => (
           <span
             key={i}
@@ -95,6 +79,35 @@ export default function OnboardingPage() {
           />
         ))}
       </div>
+    </>
+  );
+
+  return (
+    <div className="s2s-shell flex flex-col px-6 pt-6 pb-8 lg:grid lg:grid-cols-2 lg:grid-rows-[auto_1fr] lg:gap-x-16 lg:px-16 lg:py-10 lg:h-screen">
+      <div className="flex items-center justify-between lg:col-span-2">
+        <S2SLogo height={40} />
+        <button onClick={finish} className="text-sm font-semibold text-muted-foreground hover:text-foreground">
+          Skip
+        </button>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center py-6 lg:contents">
+        <SignAvatar
+          clips={clips}
+          variant="stage"
+          showGlosses
+          className="w-full max-w-[300px] h-[340px] shadow-lift lg:col-start-1 lg:row-start-2 lg:max-w-none lg:h-[min(720px,calc(100vh-140px))] lg:self-center lg:rounded-[36px]"
+        />
+        {error && <p className="mt-2 text-center text-[12px] font-semibold text-destructive lg:col-start-1">The signer could not load: {error}</p>}
+
+        <div key={index} className="animate-fade-up lg:col-start-2 lg:row-start-2 lg:self-center lg:max-w-[460px]">
+          <h1 className="mt-8 s2s-heading text-[32px] leading-[1.08] text-center lg:mt-0 lg:text-left lg:text-[56px] lg:leading-[1.02]">{slide.heading}</h1>
+          <p className="mt-3 text-center text-muted-foreground text-[15px] leading-relaxed max-w-[32ch] mx-auto lg:mx-0 lg:mt-5 lg:text-left lg:text-[19px]">{slide.body}</p>
+          <div className="hidden lg:block mt-10">{controls}</div>
+        </div>
+      </div>
+
+      <div className="lg:hidden">{controls}</div>
     </div>
   );
 }

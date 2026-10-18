@@ -39,25 +39,44 @@ export function useSignRecorder(): UseSignRecorder {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
 
-  const start = useCallback(async () => {
-    if (streamRef.current) return;
-    setError("");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        try { await videoRef.current.play(); } catch { /* autoplay */ }
-      }
-      setCameraReady(true);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Camera unavailable");
+  // At most one camera request is ever in flight. Two requests opened together
+  // share one capture source in Chromium, so closing the unwanted one would also
+  // end the one kept. A start during a pending request reuses it; a stop only
+  // records that the camera is no longer wanted, and the request's stream is
+  // released when it arrives.
+  const pendingRef = useRef<Promise<MediaStream> | null>(null);
+  const wantedRef = useRef(false);
+
+  const attach = useCallback(async (stream: MediaStream) => {
+    streamRef.current = stream;
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      try { await videoRef.current.play(); } catch { /* autoplay */ }
     }
+    setCameraReady(true);
   }, []);
 
+  const start = useCallback(async () => {
+    wantedRef.current = true;
+    if (streamRef.current || pendingRef.current) return;
+    setError("");
+    const request = navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+    });
+    pendingRef.current = request;
+    try {
+      const stream = await request;
+      if (wantedRef.current) await attach(stream);
+      else stream.getTracks().forEach((t) => t.stop());
+    } catch (e) {
+      if (wantedRef.current) setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      pendingRef.current = null;
+    }
+  }, [attach]);
+
   const stop = useCallback(() => {
+    wantedRef.current = false;
     recorderRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;

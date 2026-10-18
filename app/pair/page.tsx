@@ -98,7 +98,7 @@ function PairInner() {
     <AppShell showNav={false}>
       <PageHeader backHref="/" />
 
-      <main className="flex-1 px-6 pb-8 flex flex-col">
+      <main className="flex-1 px-6 pb-8 flex flex-col lg:w-full lg:max-w-xl lg:mx-auto lg:pt-4 lg:pb-12">
         <div className="animate-fade-up">
           <h1 className="s2s-heading text-[34px] leading-[1.08] mb-2">
             Pair your devices

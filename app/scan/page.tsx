@@ -100,7 +100,7 @@ export default function ScanPage() {
     <AppShell showNav={false}>
       <PageHeader backHref="/pair" />
 
-      <main className="flex-1 px-6 pb-8 flex flex-col">
+      <main className="flex-1 px-6 pb-8 flex flex-col lg:w-full lg:max-w-xl lg:mx-auto lg:pt-4 lg:pb-12">
         <h1 className="s2s-heading text-[30px] leading-[1.1] mb-2">Scan to join</h1>
         <p className="text-muted-foreground text-sm mb-5">{status}</p>
 

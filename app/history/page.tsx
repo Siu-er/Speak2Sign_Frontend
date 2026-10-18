@@ -49,7 +49,7 @@ export default function HistoryPage() {
   return (
     <AppShell>
       <TopHeader />
-      <main className="px-5 flex-1 pb-6 relative">
+      <main className="px-5 flex-1 pb-6 relative lg:px-12 lg:pt-10 lg:pb-10">
         <div className="flex items-center justify-between">
           <SectionHeading title="Conversation History" />
           {records.length > 0 && (
@@ -84,7 +84,7 @@ export default function HistoryPage() {
           </div>
         )}
 
-        <div className="mt-5 space-y-3">
+        <div className="mt-5 space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start">
           {records.length === 0 ? (
             <div className="s2s-card mt-4 px-6 py-10 text-center">
               <div className="mx-auto w-16 h-16 rounded-full p-[3px] s2s-ribbon">

@@ -90,7 +90,7 @@ export function SpeakerConversation() {
   const recent = sentences.slice(-3);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
       {/* Incoming signs */}
       <div className="s2s-card p-4 min-h-[6.5rem]">
         <div className="flex items-center justify-between mb-2">

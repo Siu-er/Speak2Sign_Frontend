@@ -61,7 +61,7 @@ export default function ProfilePage() {
   return (
     <AppShell showNav={false}>
       <PageHeader backHref="/" title="You" subtitle="Kept on this device only" />
-      <main className="px-5 pb-8 flex-1 flex flex-col gap-4">
+      <main className="px-5 pb-8 flex-1 flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start lg:content-start lg:px-12 lg:pb-10">
         <section className="s2s-card p-5 flex items-center gap-4">
           <div className="relative w-[72px] h-[72px] shrink-0 rounded-full p-[3px] s2s-ribbon">
             <div className="w-full h-full rounded-full bg-white grid place-items-center">
@@ -84,7 +84,7 @@ export default function ProfilePage() {
         </section>
 
         <section className="s2s-card p-2.5 flex items-center gap-3">
-          <SignAvatar clips={clips} variant="thumb" className="w-28 h-32 shrink-0" />
+          <SignAvatar clips={clips} variant="thumb" className="w-28 h-32 shrink-0 lg:w-40 lg:h-48" />
           <div className="min-w-0 pr-2">
             <p className="font-display font-bold text-foreground leading-snug">Your name in sign</p>
             <p className="text-[12px] text-muted-foreground leading-snug mt-0.5">
