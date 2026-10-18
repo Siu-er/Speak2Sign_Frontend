@@ -1,32 +1,47 @@
 /**
- * Transport contract for the two-device room relay.
+ * Transport contract for the room relay.
  *
- * The server holds no conversation state. It only relays messages between
- * the two members of a room. Event names and payload shapes here are the
- * single source of truth shared with the Socket.IO relay server.
+ * The server holds no conversation state. It relays each message from a member
+ * to every member of the opposite role in the room. Event names and payload
+ * shapes here are the single source of truth shared with the Socket.IO relay.
+ *
+ * A pair room joins two devices through a code; a meeting room is keyed by a
+ * Google Meet meeting code and holds any number of speakers and signers.
  */
 
 export type Role = "speaker" | "signer";
 
+export const OPPOSITE_ROLE: Record<Role, Role> = { speaker: "signer", signer: "speaker" };
+
 /**
- * "speech": speaker -> signer, rendered as the 3D avatar.
- * "sign":   signer -> speaker, rendered as text + speech synthesis.
+ * "speech": speaker -> signers, rendered as the 3D avatar.
+ * "sign":   signer -> speakers, rendered as text + speech synthesis.
  */
 export type MessageKind = "speech" | "sign";
+
+export type RoleCounts = Record<Role, number>;
+
+/** Google Meet meeting codes: three, four and three lowercase letters. */
+export const MEETING_CODE_PATTERN = /^[a-z]{3}-[a-z]{4}-[a-z]{3}$/;
 
 export interface JoinRoomRequest {
   roomId: string;
   role: Role;
 }
 
+export interface JoinMeetingRequest {
+  meetingCode: string;
+  role: Role;
+}
+
 export interface RoomJoinedAck {
   roomId: string;
   role: Role;
-  peers: number;
+  counts: RoleCounts;
 }
 
-export interface PeerJoinedEvent {
-  role: Role;
+export interface PresenceEvent {
+  counts: RoleCounts;
 }
 
 export interface OutboundMessage {
@@ -41,18 +56,16 @@ export interface InboundMessage {
   fromRole: Role;
 }
 
-/** Server -> client error for a failed create/join. */
-export interface RoomError {
-  code: "room_not_found" | "room_full" | "invalid_role";
-  message: string;
-}
+export type JoinError =
+  | "room_not_found"
+  | "room_full"
+  | "invalid_role"
+  | "invalid_meeting_code";
 
 export const TRANSPORT_EVENTS = {
   createRoom: "create_room",
   joinRoom: "join_room",
-  roomJoined: "room_joined",
-  peerJoined: "peer_joined",
-  peerLeft: "peer_left",
+  joinMeeting: "join_meeting",
+  presence: "presence",
   message: "message",
-  roomError: "room_error",
 } as const;

@@ -75,6 +75,7 @@ export function SignerConversation() {
   const [sentences, setSentences] = useState<SentenceSegment[]>([]);
   const [pendingText, setPendingText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [incomingError, setIncomingError] = useState("");
   const queueRef = useRef<Promise<void>>(Promise.resolve());
 
   const onMessage = room.onMessage;
@@ -85,16 +86,19 @@ export function SignerConversation() {
       setPendingText(text);
       record("speaker", text);
       setBusy(true);
-      queueRef.current = queueRef.current.then(async () => {
-        try {
+      queueRef.current = queueRef.current
+        .then(async () => {
+          setIncomingError("");
           const gloss = await textToGloss(text);
           const { sigml, fingerspelled } = await glossToSigml(gloss);
           setSentences((prev) => [...prev, { transcription: text, gloss, sigml, fingerspelled }]);
-        } finally {
+        })
+        // Each sentence reports its own failure; the queue stays open for the next one.
+        .catch((e: Error) => setIncomingError(`Could not sign "${text}": ${e.message}`))
+        .finally(() => {
           setBusy(false);
           setPendingText("");
-        }
-      });
+        });
     }, true);
     return unsubscribe;
   }, [onMessage, record]);
@@ -121,6 +125,7 @@ export function SignerConversation() {
             ? `“${sentences[sentences.length - 1].transcription}”`
             : ""}
         </p>
+        {incomingError && <p className="mt-1 text-xs text-destructive">{incomingError}</p>}
       </div>
 
       {/* Outgoing sign capture */}

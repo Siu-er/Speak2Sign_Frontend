@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   createRoom as createRoomClient,
   joinRoom as joinRoomClient,
+  joinMeeting as joinMeetingClient,
   getRoomState,
   leaveRoom as leaveRoomClient,
   ConnectionStatus,
@@ -12,7 +13,7 @@ import {
   subscribeMessages,
   subscribeState,
 } from "@/app/lib/transport/socket-client";
-import { InboundMessage, MessageKind, Role } from "@/app/lib/transport/types";
+import { InboundMessage, MessageKind, Role, RoleCounts } from "@/app/lib/transport/types";
 
 export interface UseRoomResult {
   connected: boolean;
@@ -21,8 +22,10 @@ export interface UseRoomResult {
   roomId: string | null;
   role: Role | null;
   peerConnected: boolean;
+  counts: RoleCounts;
   createRoom: (role: Role) => Promise<string>;
   joinRoom: (roomId: string, role: Role) => Promise<void>;
+  joinMeeting: (meetingCode: string, role: Role) => Promise<void>;
   send: (kind: MessageKind, text: string) => void;
   onMessage: (cb: (msg: InboundMessage) => void, replay?: boolean) => () => void;
   leaveRoom: () => void;
@@ -46,6 +49,10 @@ export function useRoom(): UseRoomResult {
     await joinRoomClient(roomId, role);
   }, []);
 
+  const joinMeeting = useCallback(async (meetingCode: string, role: Role) => {
+    await joinMeetingClient(meetingCode, role);
+  }, []);
+
   const send = useCallback((kind: MessageKind, text: string) => {
     sendMessage(kind, text);
   }, []);
@@ -65,8 +72,10 @@ export function useRoom(): UseRoomResult {
     roomId: state.roomId,
     role: state.role,
     peerConnected: state.peerConnected,
+    counts: state.counts,
     createRoom,
     joinRoom,
+    joinMeeting,
     send,
     onMessage,
     leaveRoom,

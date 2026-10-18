@@ -9,8 +9,12 @@
 import { io, Socket } from "socket.io-client";
 import {
   InboundMessage,
+  JoinError,
   MessageKind,
+  OPPOSITE_ROLE,
+  PresenceEvent,
   Role,
+  RoleCounts,
   RoomJoinedAck,
   TRANSPORT_EVENTS,
 } from "@/app/lib/transport/types";
@@ -31,6 +35,8 @@ export interface RoomState {
   status: ConnectionStatus;
   roomId: string | null;
   role: Role | null;
+  counts: RoleCounts;
+  /** At least one member of the opposite role is in the room. */
   peerConnected: boolean;
   error: string | null;
 }
@@ -44,18 +50,35 @@ interface CreateRoomAck {
 
 type JoinAck =
   | { ok: true; result: RoomJoinedAck }
-  | { ok: false; error: string };
+  | { ok: false; error: JoinError };
+
+/**
+ * The room this client means to be in, so a dropped socket can re-join it once
+ * it reconnects. A meeting room is re-created by the join if the server
+ * restarted; a pair room is not, because its code was issued by the server.
+ */
+type Membership =
+  | { kind: "pair"; roomId: string; role: Role }
+  | { kind: "meeting"; meetingCode: string; role: Role };
+
+const EMPTY_COUNTS: RoleCounts = { speaker: 0, signer: 0 };
+
+const JOIN_ERROR_TEXT: Record<JoinError, string> = {
+  room_not_found: "The conversation ended (room no longer exists).",
+  room_full: "This conversation already has two devices.",
+  invalid_role: "Choose speaker or signer.",
+  invalid_meeting_code: "This is not a Google Meet meeting code.",
+};
 
 let socket: Socket | null = null;
-// What we want to be a member of, so a dropped socket can silently re-join
-// the same room once it reconnects.
-let desiredRoom: { roomId: string; role: Role } | null = null;
+let membership: Membership | null = null;
 
 const state: RoomState = {
   connected: false,
   status: "idle",
   roomId: null,
   role: null,
+  counts: EMPTY_COUNTS,
   peerConnected: false,
   error: null,
 };
@@ -67,12 +90,17 @@ const MAX_BUFFERED_MESSAGES = 100;
 const recentMessages: InboundMessage[] = [];
 
 function snapshot(): RoomState {
-  return { ...state };
+  return { ...state, counts: { ...state.counts } };
 }
 
 function emitState(): void {
   const s = snapshot();
   stateListeners.forEach((l) => l(s));
+}
+
+function applyCounts(counts: RoleCounts): void {
+  state.counts = counts;
+  state.peerConnected = state.role !== null && counts[OPPOSITE_ROLE[state.role]] > 0;
 }
 
 function getSocket(): Socket {
@@ -91,14 +119,13 @@ function getSocket(): Socket {
     state.connected = true;
     state.status = "connected";
     state.error = null;
-    // If we already had a room, this is a reconnect: silently re-join it.
-    if (desiredRoom) rejoin();
+    if (membership) rejoin(membership);
     emitState();
   });
 
   socket.on("disconnect", (reason: string) => {
     state.connected = false;
-    state.peerConnected = false;
+    applyCounts(EMPTY_COUNTS);
     // Manual leaveRoom() disconnects intentionally; anything else is a drop
     // that Socket.IO will retry.
     state.status = reason === "io client disconnect" ? "idle" : "reconnecting";
@@ -106,7 +133,7 @@ function getSocket(): Socket {
   });
 
   socket.on("connect_error", (err: Error) => {
-    if (desiredRoom) state.error = `Connection problem: ${err.message}`;
+    if (membership) state.error = `Connection problem: ${err.message}`;
     emitState();
   });
 
@@ -120,13 +147,8 @@ function getSocket(): Socket {
     emitState();
   });
 
-  socket.on(TRANSPORT_EVENTS.peerJoined, () => {
-    state.peerConnected = true;
-    emitState();
-  });
-
-  socket.on(TRANSPORT_EVENTS.peerLeft, () => {
-    state.peerConnected = false;
+  socket.on(TRANSPORT_EVENTS.presence, (event: PresenceEvent) => {
+    applyCounts(event.counts);
     emitState();
   });
 
@@ -139,17 +161,25 @@ function getSocket(): Socket {
   return socket;
 }
 
-function rejoin(): void {
-  if (!desiredRoom || !socket) return;
-  socket.emit(TRANSPORT_EVENTS.joinRoom, desiredRoom, (ack: JoinAck) => {
-    if (ack && ack.ok) {
-      state.roomId = ack.result.roomId;
-      state.role = ack.result.role;
-      state.peerConnected = ack.result.peers > 1;
-      state.error = null;
-    } else {
-      state.error = "The conversation ended (room no longer exists).";
-    }
+function joinRequest(m: Membership): [string, object] {
+  return m.kind === "pair"
+    ? [TRANSPORT_EVENTS.joinRoom, { roomId: m.roomId, role: m.role }]
+    : [TRANSPORT_EVENTS.joinMeeting, { meetingCode: m.meetingCode, role: m.role }];
+}
+
+function applyJoined(m: Membership, result: RoomJoinedAck): void {
+  membership = m;
+  state.roomId = result.roomId;
+  state.role = result.role;
+  applyCounts(result.counts);
+  state.error = null;
+}
+
+function rejoin(m: Membership): void {
+  const [event, payload] = joinRequest(m);
+  getSocket().emit(event, payload, (ack: JoinAck) => {
+    if ("error" in ack) state.error = JOIN_ERROR_TEXT[ack.error];
+    else applyJoined(m, ack.result);
     emitState();
   });
 }
@@ -176,26 +206,19 @@ function ensureConnected(): Promise<Socket> {
   });
 }
 
-async function join(roomId: string, role: Role): Promise<RoomJoinedAck> {
+async function join(m: Membership): Promise<RoomJoinedAck> {
   const s = await ensureConnected();
+  const [event, payload] = joinRequest(m);
   return new Promise((resolve, reject) => {
-    s.emit(
-      TRANSPORT_EVENTS.joinRoom,
-      { roomId, role },
-      (ack: JoinAck) => {
-        if (!ack || ack.ok === false) {
-          const reason = ack && ack.ok === false ? ack.error : "join_room failed";
-          reject(new Error(reason || "join_room failed"));
-          return;
-        }
-        state.roomId = ack.result.roomId;
-        state.role = ack.result.role;
-        state.peerConnected = ack.result.peers > 1;
-        desiredRoom = { roomId: ack.result.roomId, role: ack.result.role };
-        emitState();
-        resolve(ack.result);
-      },
-    );
+    s.emit(event, payload, (ack: JoinAck) => {
+      if ("error" in ack) {
+        reject(new Error(JOIN_ERROR_TEXT[ack.error]));
+        return;
+      }
+      applyJoined(m, ack.result);
+      emitState();
+      resolve(ack.result);
+    });
   });
 }
 
@@ -210,12 +233,16 @@ export async function createRoom(role: Role): Promise<string> {
       resolve(ack.roomId);
     });
   });
-  await join(roomId, role);
+  await join({ kind: "pair", roomId, role });
   return roomId;
 }
 
 export async function joinRoom(roomId: string, role: Role): Promise<RoomJoinedAck> {
-  return join(roomId, role);
+  return join({ kind: "pair", roomId, role });
+}
+
+export async function joinMeeting(meetingCode: string, role: Role): Promise<RoomJoinedAck> {
+  return join({ kind: "meeting", meetingCode, role });
 }
 
 export function sendMessage(kind: MessageKind, text: string): void {
@@ -228,12 +255,12 @@ export function sendMessage(kind: MessageKind, text: string): void {
 }
 
 export function leaveRoom(): void {
-  desiredRoom = null;
+  membership = null;
   if (socket?.connected) socket.disconnect();
   recentMessages.length = 0;
   state.roomId = null;
   state.role = null;
-  state.peerConnected = false;
+  applyCounts(EMPTY_COUNTS);
   state.connected = false;
   state.status = "idle";
   state.error = null;
