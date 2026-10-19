@@ -67,7 +67,9 @@
   "17": "glow",
   "20": "cup_shell",
   "21": "ring",
-  "22": "cup_plate"
+  "22": "cup_plate",
+  "18": "hair",
+  "11": "hair_cap"
  },
  "upscale": {
   "16": 4
@@ -136,5 +138,69 @@
   "strength": 0.55
  },
  "black": 0.06,
- "jacket_trim_min_v": 0.3
+ "jacket_trim_min_v": 0.3,
+ "emissive_materials": {
+  "18": "hair_glow"
+ },
+ "hair": {
+  "stops": [
+   [
+    0,
+    [
+     236,
+     240,
+     250
+    ]
+   ],
+   [
+    0.45,
+    [
+     205,
+     232,
+     250
+    ]
+   ],
+   [
+    1,
+    [
+     90,
+     215,
+     245
+    ]
+   ]
+  ],
+  "ring": [
+   0.85,
+   0.92,
+   1.0
+  ],
+  "seed": 3,
+  "fibre_floor": 0.74,
+  "gap": 0.17,
+  "gap_depth": 0.4
+ },
+ "mtoon": {
+  "18": {
+   "shadeColorFactor": [
+    0.58,
+    0.66,
+    0.84
+   ],
+   "outlineWidthMode": "worldCoordinates",
+   "outlineWidthFactor": 0.0006,
+   "outlineColorFactor": [
+    0.124,
+    0.295,
+    0.336
+   ],
+   "outlineLightingMixFactor": 1
+  },
+  "11": {
+   "shadeColorFactor": [
+    0.58,
+    0.66,
+    0.84
+   ]
+  }
+ }
 }

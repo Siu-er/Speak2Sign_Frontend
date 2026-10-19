@@ -90,7 +90,9 @@
   "14": "glow",
   "17": "cup_shell",
   "18": "ring",
-  "19": "cup_plate"
+  "19": "cup_plate",
+  "15": "hair",
+  "11": "hair_cap"
  },
  "upscale": {
   "13": 4
@@ -266,5 +268,92 @@
    ]
   ]
  ],
- "black": 0.06
+ "black": 0.06,
+ "emissive_materials": {
+  "15": "hair_glow"
+ },
+ "hair": {
+  "stops": [
+   [
+    0,
+    [
+     45,
+     30,
+     95
+    ]
+   ],
+   [
+    0.45,
+    [
+     95,
+     60,
+     190
+    ]
+   ],
+   [
+    1,
+    [
+     40,
+     200,
+     240
+    ]
+   ]
+  ],
+  "ring": [
+   0.6,
+   0.75,
+   0.95
+  ],
+  "tips": {
+   "from": 0.55,
+   "power": 1.6,
+   "strength": 0.85,
+   "stops": [
+    [
+     0.55,
+     [
+      0,
+      140,
+      212
+     ]
+    ],
+    [
+     1,
+     [
+      190,
+      250,
+      255
+     ]
+    ]
+   ]
+  },
+  "seed": 3,
+  "fibre_floor": 0.62,
+  "gap": 0.17,
+  "gap_depth": 0.4
+ },
+ "mtoon": {
+  "15": {
+   "shadeColorFactor": [
+    0.55,
+    0.6,
+    0.78
+   ],
+   "outlineWidthMode": "worldCoordinates",
+   "outlineWidthFactor": 0.0006,
+   "outlineColorFactor": [
+    0.055,
+    0.275,
+    0.329
+   ],
+   "outlineLightingMixFactor": 1
+  },
+  "11": {
+   "shadeColorFactor": [
+    0.58,
+    0.66,
+    0.84
+   ]
+  }
+ }
 }

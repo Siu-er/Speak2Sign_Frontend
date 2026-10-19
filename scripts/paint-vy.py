@@ -1,8 +1,10 @@
 """Paint Vy's cyan signature into a VRoid export of one of her looks.
 
-  python scripts/paint-vy.py <VRoid export .vrm> <out .vrm> scripts/vy-looks/<look>.json
+  python scripts/paint-vy.py assets/vy/uniform-export.vrm public/avatars/vy.vrm scripts/vy-looks/uniform.json
+  python scripts/paint-vy.py assets/vy/hoodie-export.vrm public/avatars/vy-hoodie.vrm scripts/vy-looks/hoodie.json
 
-Requires numpy, scipy and Pillow. The look file maps the export's material
+The exports come from the VRoid Studio projects beside them in assets/vy. Requires
+numpy, scipy and Pillow. The look file maps the export's material
 indices to the roles below and holds the texel positions each role draws at,
 measured on that export's texture layout; a re-export with a changed outfit
 needs its positions measured again.
@@ -478,7 +480,72 @@ def cup_shell(a, hn, lay):
     out[..., :3] = a[..., :3] * lay["cup_darken"]
     return out
 
-ROLES = {f.__name__: f for f in (jacket, hoodie, collar, shirt_skirt, skirt, boots, body, tie, glow, cup_shell, ring, cup_plate)}
+def strand_colour(stops, v):
+    """Colour along a strand from (position, rgb) stops, position 0 at the root and 1 at the tip."""
+    ps = [q for q, _ in stops]
+    cs = np.array([c for _, c in stops], float) / 255
+    return np.stack([np.interp(v, ps, cs[:, k]) for k in range(3)], -1)
+
+FIBRE_PITCH = 7  # texels between fibre clumps across the strip; finer pitches read as stringy rather than as hair
+
+def fibres(width, height, seed):
+    """Strand texture for one shared hair strip: per column a fibre brightness in 0..1, drifting
+    gently down the strand so the fibres do not run ruler-straight."""
+    rng = np.random.default_rng(seed)
+    pad = 2 * FIBRE_PITCH
+    knots = rng.random((width + pad) // FIBRE_PITCH + 3)
+    base = np.interp(np.arange(width + pad) / FIBRE_PITCH, np.arange(len(knots)), knots)
+    fine = nd.gaussian_filter1d(rng.random(width + pad), 1.5)
+    line = nd.gaussian_filter1d(0.8 * base + 0.2 * (fine - fine.min()) / np.ptp(fine), 1.0)
+    line = (line - line.min()) / np.ptp(line)
+    v = np.arange(height)[:, None]
+    drift = 3.0 * np.sin(v / height * 5.1) + 1.5 * np.sin(v / height * 13.7 + 0.8)
+    cols = np.clip(np.arange(width)[None, :] + FIBRE_PITCH + drift, 0, width + pad - 1)
+    return np.interp(cols, np.arange(width + pad), line)
+
+def hair(a, hn, lay):
+    """Every strand maps onto one shared strip of texture, root at the top and tip at the bottom,
+    so each texel takes the colour of its place along the strand. Fibres and the fine dark lines
+    between strands are drawn in, since the strip carries no strand detail of its own."""
+    h = lay["hair"]
+    rows, cols = a.shape[:2]
+    f = fibres(cols, rows, h["seed"])
+    shade = h["fibre_floor"] + (1 - h["fibre_floor"]) * f
+    gaps = np.clip((h["gap"] - f) / h["gap"], 0, 1) * h["gap_depth"]
+    v = np.linspace(0, 1, rows)[:, None]
+    out = a.copy()
+    out[..., :3] = strand_colour(h["stops"], v) * (shade * (1 - gaps))[..., None]
+    return out
+
+def hair_cap(a, hn, lay):
+    """The scalp under the strands takes the root colour, keeping its own shading."""
+    h = lay["hair"]
+    lum = a[..., :3].max(-1)
+    inside = a[..., 3] > 0.5
+    shade = h["fibre_floor"] + (1 - h["fibre_floor"]) * np.clip(lum / np.percentile(lum[inside], 99), 0, 1)
+    out = a.copy()
+    out[..., :3] = np.where(inside[..., None], strand_colour(h["stops"], 0.0) * shade[..., None], a[..., :3])
+    return out
+
+def hair_glow(a, hn, lay):
+    """The hair's emission: its highlight ring kept at a set strength, and, where the look asks
+    for it, tips that light up like fibre optics, brightening towards the end of each strand
+    with a strength that varies from strand to strand."""
+    h = lay["hair"]
+    out = a.copy()
+    out[..., :3] = a[..., :3].max(-1, keepdims=True) * np.array(h["ring"])
+    tips = h.get("tips")
+    if tips:
+        rows, cols = a.shape[:2]
+        v = np.linspace(0, 1, rows)[:, None]
+        u = np.linspace(0, 1, cols)[None, :]
+        rise = np.clip((v - tips["from"]) / (1 - tips["from"]), 0, 1) ** tips["power"]
+        strands = 0.55 + 0.45 * np.abs(np.sin(u * 61.0) * np.cos(u * 23.0 + 1.1))
+        glow = (rise * strands)[..., None] * strand_colour(tips["stops"], v) * tips["strength"]
+        out[..., :3] = np.clip(out[..., :3] + glow, 0, 1)
+    return out
+
+ROLES = {f.__name__: f for f in (hair, hair_cap, hair_glow, jacket, hoodie, collar, shirt_skirt, skirt, boots, body, tie, glow, cup_shell, ring, cup_plate)}
 NEEDS_COVERAGE = {ring, tie}
 
 COMPONENT = {5121: np.uint8, 5123: np.uint16, 5125: np.uint32, 5126: np.float32}
@@ -516,10 +583,17 @@ def main(src, dst, layout):
     views = gltf["bufferViews"]
     blobs = [bin_[v.get("byteOffset", 0):v.get("byteOffset", 0) + v["byteLength"]] for v in views]
     done = set()
-    for key, role in lay["materials"].items():
+    jobs = [(key, role, "base") for key, role in lay["materials"].items()]
+    jobs += [(key, role, "emissive") for key, role in lay.get("emissive_materials", {}).items()]
+    for key, role, slot in jobs:
         i, fn = int(key), ROLES[role]
-        pbr = gltf["materials"][i]["pbrMetallicRoughness"]
-        t = pbr["baseColorTexture"]["index"]
+        mat = gltf["materials"][i]
+        if slot == "base":
+            holder, factor_key = mat["pbrMetallicRoughness"], "baseColorFactor"
+            t = holder["baseColorTexture"]["index"]
+        else:
+            holder, factor_key = mat, "emissiveFactor"
+            t = mat["emissiveTexture"]["index"]
         img = gltf["images"][gltf["textures"][t]["source"]]
         if img["bufferView"] in done:
             raise ValueError(f"material {i} shares an image already painted")
@@ -528,9 +602,9 @@ def main(src, dst, layout):
         scale = lay.get("upscale", {}).get(key, 1)
         im = im.resize((im.width * scale, im.height * scale), Image.LANCZOS)
         a = np.asarray(im, float) / 255
-        # The material's tint is baked into the texture, so painted colour renders exactly as drawn.
-        a[..., :3] *= np.array(pbr.get("baseColorFactor", [1, 1, 1, 1])[:3])
-        pbr["baseColorFactor"] = [1, 1, 1, 1]
+        # The material's factor is baked into the texture, so painted colour renders exactly as drawn.
+        a[..., :3] *= np.array(holder.get(factor_key, [1, 1, 1, 1])[:3])
+        holder[factor_key] = [1, 1, 1, 1] if slot == "base" else [1, 1, 1]
         heights, covered = height_map(tris[i], a.shape[1], a.shape[0])
         hn = np.clip(heights / BODY_HEIGHT_M, 0, 1)
         painted = fn(a, hn, lay, covered) if fn in NEEDS_COVERAGE else fn(a, hn, lay)
@@ -538,7 +612,9 @@ def main(src, dst, layout):
         Image.fromarray((painted.clip(0, 1) * 255).round().astype(np.uint8)).save(out, "PNG")
         img["mimeType"] = "image/png"
         blobs[img["bufferView"]] = out.getvalue()
-        print("painted material", i)
+        print("painted material", i, slot)
+    for key, fields in lay.get("mtoon", {}).items():
+        gltf["materials"][int(key)]["extensions"]["VRMC_materials_mtoon"].update(fields)
     packed = bytearray()
     for v, b in zip(views, blobs):
         packed += b"\0" * (-len(packed) % 4)
