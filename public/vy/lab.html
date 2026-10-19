@@ -29,7 +29,7 @@
 <script type="module">
   // Plays every clip of the motion library. Query: ?model=<avatar id>&clip=<name>&ui=0&camera=full|upper|face&blink=0
   import * as THREE from "three";
-  import { loadVrm, CLIPS, MotionPlayer, applySample, Life, loadMotionIndex, loadMotions } from "/vy/vy-core.js";
+  import { loadVrm, CLIPS, MotionPlayer, applySample, Life, Gaze, loadMotionIndex, loadMotions, IDLE } from "/vy/vy-core.js";
 
   const q = new URLSearchParams(location.search);
   const MODEL = q.get("model");
@@ -72,12 +72,14 @@
   addEventListener("resize", frame);
   frame();
 
-  const player = new MotionPlayer("idle", hipsRest.y);
+  await loadMotions([IDLE]);
+  const player = new MotionPlayer(IDLE, hipsRest.y);
+  const gaze = new Gaze(vrm, scene);
   const life = new Life();
   const nav = document.getElementById("clips");
   if (q.get("ui") === "0") nav.classList.add("hidden");
   const buttons = {};
-  const groups = { "hand-keyed": Object.keys(CLIPS) };
+  const groups = { "hand-keyed": Object.keys(CLIPS).filter((n) => !CLIPS[n].captured) };
   for (const m of await loadMotionIndex()) (groups[m.category] ??= []).push(m.name);
   for (const [group, names] of Object.entries(groups)) {
     const h = document.createElement("h2");
@@ -110,6 +112,7 @@
     applySample(vrm, s, hipsRest);
     vrm.scene.rotation.y = facing + s.turn;
     life.apply(vrm, t);
+    gaze.apply(t, dt);
     if (q.get("blink") === "0") vrm.expressionManager?.setValue("blink", 0);
     if (!springsReady) {
       vrm.scene.updateMatrixWorld(true);

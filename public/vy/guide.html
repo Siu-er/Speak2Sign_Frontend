@@ -23,9 +23,10 @@
   //
   // Messages in:  vy-config { height }  vy-place { x, y }  vy-walk { x, y, gait }
   //               vy-play { clip }      vy-face { side: "left" | "right" | "front" | "back" }
-  // Messages out: vy-ready { gaits }, vy-arrived, vy-clip-done { clip }
+  //               vy-look { x, y } (a screen point) | vy-look { viewer: true }
+  // Messages out: vy-ready { gaits }, vy-arrived, vy-clip-done { clip }, vy-error { message }
   import * as THREE from "three";
-  import { loadVrm, CLIPS, MotionPlayer, applySample, Life, clipDuration, loadMotions, gaitSpeed } from "/vy/vy-core.js";
+  import { loadVrm, CLIPS, MotionPlayer, applySample, Life, Gaze, clipDuration, loadMotions, gaitSpeed, IDLE } from "/vy/vy-core.js";
 
   const MODEL = new URLSearchParams(location.search).get("model");
   if (!MODEL) throw new Error("guide.html requires a ?model=<avatar id> parameter");
@@ -33,6 +34,17 @@
   const GAITS = { walk: {}, walkHappy: {}, walkCatwalk: {}, strut: {}, sneak: {}, run: {}, runHappy: {}, jog: {}, slideWalk: {}, walkBackward: { backward: true } };
   const FACE = { front: 0, right: Math.PI / 2, back: Math.PI, left: -Math.PI / 2 };
   const TURN_RATE = 9;
+  // While she stands with nothing to do, she fidgets now and then: one of these
+  // plays once after a pause drawn from FIDGET_PAUSE_S, then she settles back.
+  const FIDGETS = ["idleLookAround", "stretchArms", "idleHappy"];
+  const FIDGET_PAUSE_S = [7, 12];
+  // A held gesture relaxes back to the idle loop this long after it completes.
+  const HOLD_RELEASE_S = 1.2;
+  // UI targets are treated as sitting this far in front of her, in metres, to
+  // turn a screen offset into a gaze angle.
+  const GAZE_DEPTH_M = 1;
+  // Eye height above the feet, in body heights, as the origin of her gaze.
+  const EYE_HEIGHT = 0.92;
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(Math.max(devicePixelRatio, 1.5), 2));
@@ -48,7 +60,7 @@
   addEventListener("resize", () => renderer.setSize(innerWidth, innerHeight));
   renderer.setSize(innerWidth, innerHeight);
 
-  const [vrm] = await Promise.all([loadVrm(renderer, `/avatars/${MODEL}.vrm`), loadMotions(Object.keys(GAITS))]);
+  const [vrm] = await Promise.all([loadVrm(renderer, `/avatars/${MODEL}.vrm`), loadMotions([IDLE, ...FIDGETS, ...Object.keys(GAITS)])]);
   const rig = new THREE.Group();
   rig.add(vrm.scene);
   scene.add(rig);
@@ -61,12 +73,25 @@
   const speed = Object.fromEntries(Object.keys(GAITS).map((g) => [g, gaitSpeed(vrm, g, hipsRest)]));
 
   const state = { x: -9999, y: 0, tx: 0, ty: 0, gait: null, heightPx: 300, turn: 0, turnTarget: 0 };
-  const player = new MotionPlayer("idle", hipsRest.y);
+  const player = new MotionPlayer(IDLE, hipsRest.y);
   const life = new Life();
+  const gaze = new Gaze(vrm, scene);
+  // A screen point she is looking at, or null to look at the viewer.
+  let lookAt = null;
+  let fidgetAt = 0;
+  const scheduleFidget = (now) => { fidgetAt = now + THREE.MathUtils.randFloat(...FIDGET_PAUSE_S); };
   const clock = new THREE.Clock();
   const post = (msg) => parent.postMessage(msg, location.origin);
   player.onFinish((clip) => post({ type: "vy-clip-done", clip }));
   const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+
+  // A clip that plays once and then hands back to the idle loop: a fidget, or a
+  // held gesture being released.
+  let transient = null;
+  function playUntil(name, now, until) {
+    player.play(name, now, { fade: 0.35 });
+    transient = { name, until };
+  }
 
   async function handle(m) {
     const now = clock.elapsedTime;
@@ -75,6 +100,8 @@
     if (m.type === "vy-walk") {
       if (!GAITS[m.gait]) throw new Error(`Unknown gait ${m.gait}`);
       state.tx = m.x; state.ty = m.y;
+      lookAt = null;
+      transient = null;
       const dx = state.tx - state.x, dy = state.ty - state.y;
       if (Math.hypot(dx, dy) < 2) { post({ type: "vy-arrived" }); return; }
       state.gait = m.gait;
@@ -84,13 +111,21 @@
     if (m.type === "vy-play") {
       await loadMotions([m.clip]);
       if (!CLIPS[m.clip]) throw new Error(`Unknown clip ${m.clip}`);
-      player.play(m.clip, clock.elapsedTime);
-      if (CLIPS[m.clip].hold) setTimeout(() => post({ type: "vy-clip-done", clip: m.clip }), clipDuration(CLIPS[m.clip]) * 1000);
+      const start = clock.elapsedTime;
+      const span = clipDuration(CLIPS[m.clip]);
+      player.play(m.clip, start);
+      transient = null;
+      if (CLIPS[m.clip].hold) {
+        setTimeout(() => post({ type: "vy-clip-done", clip: m.clip }), span * 1000);
+        transient = { name: m.clip, until: start + span + HOLD_RELEASE_S };
+      }
+      scheduleFidget(start + span);
     }
     if (m.type === "vy-face") {
       if (!(m.side in FACE)) throw new Error(`Unknown side ${m.side}`);
       state.turnTarget = FACE[m.side];
     }
+    if (m.type === "vy-look") lookAt = m.viewer ? null : { x: m.x, y: m.y };
   }
   addEventListener("message", (e) => {
     if (e.origin !== location.origin) return;
@@ -98,6 +133,7 @@
   });
 
   let springsReady = false;
+  scheduleFidget(0);
   renderer.setAnimationLoop(() => {
     const dt = Math.min(clock.getDelta(), 1 / 30);
     const now = clock.elapsedTime;
@@ -110,11 +146,21 @@
         state.x = state.tx; state.y = state.ty;
         state.gait = null;
         state.turnTarget = FACE.front;
-        player.play("idle", now, { fade: 0.25 });
+        player.play(IDLE, now, { fade: 0.25 });
+        scheduleFidget(now);
         post({ type: "vy-arrived" });
       } else {
         state.x += (dx / dist) * step; state.y += (dy / dist) * step;
       }
+    }
+    if (transient && player.current.name === transient.name && now >= transient.until) {
+      transient = null;
+      player.play(IDLE, now, { fade: 0.5 });
+      scheduleFidget(now);
+    }
+    if (!state.gait && !transient && player.current.name === IDLE && now >= fidgetAt) {
+      const name = FIDGETS[Math.floor(Math.random() * FIDGETS.length)];
+      playUntil(name, now, now + clipDuration(CLIPS[name]));
     }
     state.turn += wrapAngle(state.turnTarget - state.turn) * Math.min(1, dt * TURN_RATE);
 
@@ -122,6 +168,13 @@
     applySample(vrm, s, hipsRest);
     life.apply(vrm, now);
     vrm.scene.rotation.y = facing0 + state.turn + s.turn;
+    if (lookAt) {
+      const dxm = (lookAt.x - state.x) / ppm;
+      const dym = (lookAt.y - (state.y - EYE_HEIGHT * state.heightPx)) / ppm;
+      gaze.look(Math.atan2(dxm, GAZE_DEPTH_M) - state.turn, Math.atan2(-dym, GAZE_DEPTH_M));
+    } else {
+      gaze.look(0, 0);
+    }
 
     // The character stays at true scale so spring bones simulate in metres;
     // the camera is scaled instead, at heightPx CSS pixels per body height.
@@ -133,6 +186,8 @@
       vrm.springBoneManager?.reset();
       springsReady = true;
     }
+    rig.updateMatrixWorld(true);
+    gaze.apply(now, dt);
     vrm.update(dt);
     renderer.render(scene, camera);
   });

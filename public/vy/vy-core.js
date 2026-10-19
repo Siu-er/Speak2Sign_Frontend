@@ -210,6 +210,10 @@ export function clipDuration(clip) {
   return clip.keys[clip.keys.length - 1].t;
 }
 
+// The resting loop every player returns to: a captured standing idle with a
+// gentle weight shift.
+export const IDLE = "idleWeightShift";
+
 // ---------- captured motions ----------
 // Motion-capture clips baked by scripts/bake-mixamo.mjs into /vy/motions: per
 // frame, a rotation for every humanoid bone and the hips position in rest hip
@@ -220,14 +224,36 @@ export async function loadMotionIndex() {
   return res.json();
 }
 
+// A name ending in MIRROR plays the capture reflected across the body's
+// midline: left and right bones swap, and every rotation and the hips track
+// reflect through the YZ plane (x of a position negates; y and z of a
+// rotation negate).
+export const MIRROR = ".mirror";
+
+function mirrored(m) {
+  const bones = {};
+  for (const [bone, values] of Object.entries(m.bones)) {
+    const other = bone.startsWith("left") ? "right" + bone.slice(4) : bone.startsWith("right") ? "left" + bone.slice(5) : bone;
+    const out = Float32Array.from(values);
+    for (let i = 0; i < out.length; i += 4) { out[i + 1] = -out[i + 1]; out[i + 2] = -out[i + 2]; }
+    bones[other] = out;
+  }
+  const hips = Float32Array.from(m.hips);
+  for (let i = 0; i < hips.length; i += 3) hips[i] = -hips[i];
+  return { bones, hips };
+}
+
 export async function loadMotions(names) {
   await Promise.all(names.filter((name) => !CLIPS[name]).map(async (name) => {
-    const res = await fetch(`/vy/motions/${encodeURIComponent(name)}.json`);
-    if (!res.ok) throw new Error(`Motion ${name}: HTTP ${res.status}`);
+    const base = name.endsWith(MIRROR) ? name.slice(0, -MIRROR.length) : name;
+    const res = await fetch(`/vy/motions/${encodeURIComponent(base)}.json`);
+    if (!res.ok) throw new Error(`Motion ${base}: HTTP ${res.status}`);
     const m = await res.json();
-    const bones = {};
+    let bones = {};
     for (const [bone, values] of Object.entries(m.bones)) bones[bone] = Float32Array.from(values);
-    CLIPS[name] = { loop: m.loop, face: m.face, captured: { fps: m.fps, frames: m.frames, bones, hips: Float32Array.from(m.hips) } };
+    let hips = Float32Array.from(m.hips);
+    if (base !== name) ({ bones, hips } = mirrored({ bones, hips }));
+    CLIPS[name] = { loop: m.loop, face: m.face, captured: { fps: m.fps, frames: m.frames, bones, hips } };
   }));
 }
 
@@ -423,8 +449,58 @@ export function applySample(vrm, sample, hipsRest) {
   const offset = sample.hips.clone();
   if (flip) offset.set(-offset.x, offset.y, -offset.z);
   hips.position.copy(hipsRest).add(offset);
+  // Expressions a clip does not name return to neutral, so a smile ends with its clip.
   const em = vrm.expressionManager;
-  if (em) for (const [name, weight] of Object.entries(sample.face)) em.setValue(name, weight);
+  if (em) {
+    em.resetValues();
+    for (const [name, weight] of Object.entries(sample.face)) em.setValue(name, weight);
+  }
+}
+
+// Where she looks, as yaw and pitch from the direction her body faces. The
+// eyes follow through the VRM look-at target; the head carries a share of
+// the turn, so a glance reads as attention rather than a rolled eye. Small
+// random saccades keep a held gaze from looking frozen.
+const HEAD_SHARE = 0.45;
+const GAZE_RATE = 6;
+
+export class Gaze {
+  constructor(vrm, scene) {
+    if (!vrm.lookAt) throw new Error("This VRM has no look-at");
+    this.vrm = vrm;
+    this.target = new THREE.Object3D();
+    scene.add(this.target);
+    vrm.lookAt.target = this.target;
+    this.yaw = 0; this.pitch = 0;
+    this.goalYaw = 0; this.goalPitch = 0;
+    this.saccade = new THREE.Vector2();
+    this.nextSaccade = 1;
+  }
+
+  look(yaw, pitch = 0) {
+    this.goalYaw = yaw;
+    this.goalPitch = pitch;
+  }
+
+  apply(t, dt) {
+    const k = Math.min(1, dt * GAZE_RATE);
+    this.yaw += (this.goalYaw - this.yaw) * k;
+    this.pitch += (this.goalPitch - this.pitch) * k;
+    if (t >= this.nextSaccade) {
+      this.saccade.set((Math.random() - 0.5) * 0.12, (Math.random() - 0.5) * 0.06);
+      this.nextSaccade = t + 0.8 + Math.random() * 2.2;
+    }
+    const head = this.vrm.humanoid.getNormalizedBoneNode("head");
+    head.rotateY(this.yaw * HEAD_SHARE);
+    head.rotateX(-this.pitch * HEAD_SHARE);
+    head.updateWorldMatrix(true, false);
+    const eye = head.getWorldPosition(new THREE.Vector3());
+    const facing = this.vrm.scene.getWorldQuaternion(new THREE.Quaternion());
+    const dir = new THREE.Vector3(0, 0, 1)
+      .applyEuler(new THREE.Euler(-(this.pitch + this.saccade.y), this.yaw + this.saccade.x, 0, "YXZ"))
+      .applyQuaternion(facing);
+    this.target.position.copy(eye).addScaledVector(dir, 2);
+  }
 }
 
 // Breathing, a faint sway and natural blinking layered on any clip.

@@ -40,6 +40,7 @@ const HAND_HEIGHT = 0.78;
 const EDGE_GAP_PX = 8;
 const TARGET_WAIT_MS = 6000;
 const SCROLL_SETTLE_MS = 450;
+const GLANCE_MS = 1600;
 
 interface GuideApi {
   start: () => void;
@@ -187,8 +188,12 @@ export function VyGuideProvider({ children }: { children: React.ReactNode }) {
         clip = hand > r.bottom ? "pointUp" : pointsRight ? "pointLeft" : "pointRight";
       }
       send({ type: "vy-play", clip });
+      // She glances at the feature while presenting it, then back at the reader as she explains.
+      send({ type: "vy-look", x: r.left + r.width / 2, y: r.top + r.height / 2 });
+      const glance = setTimeout(() => { if (!cancelled.current) send({ type: "vy-look", viewer: true }); }, GLANCE_MS);
       setBubble({ text: step.say, x, y: feet - height, halfWidth: half, freeSide: pointsRight ? "left" : "right", last: i === TOUR.length - 1 });
       await new Promise<void>((resolve) => { advance.current = resolve; });
+      clearTimeout(glance);
       advance.current = null;
     }
     if (cancelled.current) return;
