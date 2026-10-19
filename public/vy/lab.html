@@ -10,9 +10,10 @@
     @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #14101f; --ink: #efeaff; --chip: #241c38; } }
     html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px system-ui, sans-serif; overflow: hidden; }
     canvas { display: block; width: 100%; height: 100%; }
-    nav { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    nav { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-height: 40vh; overflow-y: auto; }
+    nav h2 { flex-basis: 100%; margin: 6px 0 0; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; opacity: 0.6; }
     nav.hidden { display: none; }
-    button { border: 0; border-radius: 999px; padding: 8px 14px; background: var(--chip); color: var(--ink); cursor: pointer; box-shadow: 0 2px 8px rgb(0 0 0 / 0.12); }
+    button { border: 0; border-radius: 999px; padding: 6px 12px; background: var(--chip); color: var(--ink); cursor: pointer; box-shadow: 0 2px 8px rgb(0 0 0 / 0.12); }
     button.on { background: var(--accent); color: #fff; }
   </style>
   <script type="importmap">
@@ -28,7 +29,7 @@
 <script type="module">
   // Plays every clip of the motion library. Query: ?model=<avatar id>&clip=<name>&ui=0&camera=full|upper|face&blink=0
   import * as THREE from "three";
-  import { loadVrm, CLIPS, MotionPlayer, applySample, Life } from "/vy/vy-core.js";
+  import { loadVrm, CLIPS, MotionPlayer, applySample, Life, loadMotionIndex, loadMotions } from "/vy/vy-core.js";
 
   const q = new URLSearchParams(location.search);
   const MODEL = q.get("model");
@@ -71,19 +72,27 @@
   addEventListener("resize", frame);
   frame();
 
-  const player = new MotionPlayer("idle");
+  const player = new MotionPlayer("idle", hipsRest.y);
   const life = new Life();
   const nav = document.getElementById("clips");
   if (q.get("ui") === "0") nav.classList.add("hidden");
   const buttons = {};
-  for (const name of Object.keys(CLIPS)) {
-    const b = document.createElement("button");
-    b.textContent = name;
-    b.onclick = () => select(name);
-    nav.append(b);
-    buttons[name] = b;
+  const groups = { "hand-keyed": Object.keys(CLIPS) };
+  for (const m of await loadMotionIndex()) (groups[m.category] ??= []).push(m.name);
+  for (const [group, names] of Object.entries(groups)) {
+    const h = document.createElement("h2");
+    h.textContent = group;
+    nav.append(h);
+    for (const name of names) {
+      const b = document.createElement("button");
+      b.textContent = name;
+      b.onclick = () => select(name);
+      nav.append(b);
+      buttons[name] = b;
+    }
   }
-  function select(name) {
+  async function select(name) {
+    await loadMotions([name]);
     player.play(name, clock.elapsedTime);
     for (const [n, b] of Object.entries(buttons)) b.classList.toggle("on", n === name);
   }
@@ -92,7 +101,7 @@
   const clock = new THREE.Clock();
   let springsReady = false;
   window.vyLab = { play: select, time: () => clock.elapsedTime };
-  if (q.get("clip")) select(q.get("clip"));
+  if (q.get("clip")) await select(q.get("clip"));
 
   renderer.setAnimationLoop(() => {
     const dt = Math.min(clock.getDelta(), 1 / 30);

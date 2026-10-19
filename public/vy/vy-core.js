@@ -120,40 +120,6 @@ export const CLIPS = {
       { t: 1.8, pose: with_(), face: { happy: 0.4 } },
     ],
   },
-  jump: {
-    keys: [
-      { t: 0, pose: with_(), hips: [0, 0, 0] },
-      { t: 0.22, pose: with_({ spine: [14, 0, 0], leftUpperLeg: [-38, 0, 0], rightUpperLeg: [-38, 0, 0], leftLowerLeg: [70, 0, 0], rightLowerLeg: [70, 0, 0], leftFoot: [-30, 0, 0], rightFoot: [-30, 0, 0], leftUpperArm: [30, 0, -62], rightUpperArm: [30, 0, 62] }), hips: [0, -0.12, 0] },
-      { t: 0.45, pose: with_({ spine: [-6, 0, 0], head: [-8, 0, 0], leftUpperArm: [0, 0, 40], rightUpperArm: [0, 0, -40], leftLowerArm: [0, -10, 0], rightLowerArm: [0, 10, 0], leftLowerLeg: [24, 0, 0], rightLowerLeg: [24, 0, 0], leftFoot: [20, 0, 0], rightFoot: [20, 0, 0], ...curl("left", 4), ...curl("right", 4) }), hips: [0, 0.32, 0], face: { happy: 1 } },
-      { t: 0.68, pose: with_({ leftUpperArm: [0, 0, 30], rightUpperArm: [0, 0, -30], leftLowerLeg: [36, 0, 0], rightLowerLeg: [36, 0, 0], leftUpperLeg: [-20, 0, 0], rightUpperLeg: [-20, 0, 0] }), hips: [0, 0.18, 0], face: { happy: 1 } },
-      { t: 0.86, pose: with_({ spine: [12, 0, 0], leftUpperLeg: [-34, 0, 0], rightUpperLeg: [-34, 0, 0], leftLowerLeg: [62, 0, 0], rightLowerLeg: [62, 0, 0], leftFoot: [-28, 0, 0], rightFoot: [-28, 0, 0] }), hips: [0, -0.1, 0], face: { happy: 0.8 } },
-      { t: 1.25, pose: with_(), hips: [0, 0, 0], face: { happy: 0.5 } },
-    ],
-  },
-  walk: {
-    loop: true,
-    keys: [0, 1, 2, 3].map((k) => {
-      const phase = k % 2 === 0 ? 1 : 0;
-      const s = k < 2 ? 1 : -1;
-      const contact = phase === 1;
-      return {
-        t: k * 0.24,
-        pose: with_({
-          leftUpperLeg: [contact ? -26 * s : -4 * s, 0, 0],
-          rightUpperLeg: [contact ? 26 * s : 4 * s, 0, 0],
-          leftLowerLeg: [contact ? (s > 0 ? 6 : 34) : (s > 0 ? 40 : 10), 0, 0],
-          rightLowerLeg: [contact ? (s > 0 ? 34 : 6) : (s > 0 ? 10 : 40), 0, 0],
-          leftUpperArm: [contact ? 20 * s : 6 * s, 0, -74],
-          rightUpperArm: [contact ? -20 * s : -6 * s, 0, 74],
-          leftLowerArm: [0, -20, 0], rightLowerArm: [0, 20, 0],
-          hips: [0, contact ? 6 * s : 0, 0],
-          spine: [4, contact ? -5 * s : 0, 0],
-          head: [-2, contact ? 4 * s : 0, 0],
-        }),
-        hips: [0, contact ? -0.02 : 0.012, 0],
-      };
-    }),
-  },
   pointLeft: {
     keys: [
       { t: 0, pose: with_() },
@@ -229,14 +195,6 @@ export const CLIPS = {
       { t: 1.4, pose: with_(), face: { happy: 0.5 } },
     ],
   },
-  spin: {
-    keys: [
-      { t: 0, pose: with_(), turn: 0 },
-      { t: 0.2, pose: with_({ leftUpperArm: [0, 0, -40], rightUpperArm: [0, 0, 40] }), turn: 40, hips: [0, 0.04, 0], face: { happy: 1 } },
-      { t: 0.7, pose: with_({ leftUpperArm: [0, 0, -30], rightUpperArm: [0, 0, 30] }), turn: 320, hips: [0, 0.04, 0], face: { happy: 1 } },
-      { t: 1.0, pose: with_(), turn: 360, hips: [0, 0, 0], face: { happy: 0.8 } },
-    ],
-  },
 };
 
 // ---------- sampling ----------
@@ -248,7 +206,82 @@ function catmull(p0, p1, p2, p3, u) {
 }
 
 export function clipDuration(clip) {
+  if (clip.captured) return (clip.captured.frames - 1) / clip.captured.fps;
   return clip.keys[clip.keys.length - 1].t;
+}
+
+// ---------- captured motions ----------
+// Motion-capture clips baked by scripts/bake-mixamo.mjs into /vy/motions: per
+// frame, a rotation for every humanoid bone and the hips position in rest hip
+// heights. They are fetched on demand and join CLIPS under their own names.
+export async function loadMotionIndex() {
+  const res = await fetch("/vy/motions/index.json");
+  if (!res.ok) throw new Error(`Motion index: HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function loadMotions(names) {
+  await Promise.all(names.filter((name) => !CLIPS[name]).map(async (name) => {
+    const res = await fetch(`/vy/motions/${encodeURIComponent(name)}.json`);
+    if (!res.ok) throw new Error(`Motion ${name}: HTTP ${res.status}`);
+    const m = await res.json();
+    const bones = {};
+    for (const [bone, values] of Object.entries(m.bones)) bones[bone] = Float32Array.from(values);
+    CLIPS[name] = { loop: m.loop, face: m.face, captured: { fps: m.fps, frames: m.frames, bones, hips: Float32Array.from(m.hips) } };
+  }));
+}
+
+function sampleCaptured(clip, time, hipsHeight) {
+  const c = clip.captured;
+  const span = clipDuration(clip);
+  const t = clip.loop ? ((time % span) + span) % span : THREE.MathUtils.clamp(time, 0, span);
+  const f = t * c.fps;
+  const i0 = Math.min(Math.floor(f), c.frames - 1);
+  const i1 = Math.min(i0 + 1, c.frames - 1);
+  const u = f - i0;
+  const bones = {};
+  const next = new THREE.Quaternion();
+  for (const [name, values] of Object.entries(c.bones)) {
+    bones[name] = new THREE.Quaternion().fromArray(values, i0 * 4).slerp(next.fromArray(values, i1 * 4), u);
+  }
+  const h = (k) => c.hips[i0 * 3 + k] + (c.hips[i1 * 3 + k] - c.hips[i0 * 3 + k]) * u;
+  return {
+    bones,
+    hips: new THREE.Vector3(h(0) * hipsHeight, (h(1) - 1) * hipsHeight, h(2) * hipsHeight),
+    turn: 0,
+    face: { ...clip.face },
+  };
+}
+
+// The speed, in metres per second, at which a looping in-place gait would carry
+// the character: the backward speed of whichever foot is on the ground,
+// averaged over the cycle. Moving the character at this speed keeps the
+// planted foot still on the floor.
+export function gaitSpeed(vrm, clipName, hipsRest) {
+  const clip = CLIPS[clipName];
+  if (!clip?.captured || !clip.loop) throw new Error(`gaitSpeed needs a looping captured clip, got ${clipName}`);
+  const H = vrm.humanoid;
+  const feet = ["leftFoot", "rightFoot"].map((n) => H.getNormalizedBoneNode(n));
+  const saved = vrm.scene.rotation.y;
+  vrm.scene.rotation.y = 0;
+  const span = clipDuration(clip);
+  const steps = Math.round(span * clip.captured.fps);
+  const dt = span / steps;
+  const pos = (t) => {
+    applySample(vrm, sampleCaptured(clip, t, hipsRest.y), hipsRest);
+    vrm.scene.updateMatrixWorld(true);
+    return feet.map((f) => f.getWorldPosition(new THREE.Vector3()));
+  };
+  let total = 0;
+  let prev = pos(0);
+  for (let i = 1; i <= steps; i++) {
+    const cur = pos(i * dt);
+    const planted = cur[0].y < cur[1].y ? 0 : 1;
+    total += Math.abs(cur[planted].z - prev[planted].z);
+    prev = cur;
+  }
+  vrm.scene.rotation.y = saved;
+  return total / span;
 }
 
 function channel(key, kind, name, size) {
@@ -289,8 +322,10 @@ function faceNames(clip) {
   return [...names];
 }
 
-// Samples a clip into bone quaternions, a hips offset, a turn angle and expression weights.
-export function sampleClip(clip, time) {
+// Samples a clip into bone quaternions, a hips offset in metres, a turn angle and
+// expression weights. Captured clips scale their hips motion by hipsHeight.
+export function sampleClip(clip, time, hipsHeight) {
+  if (clip.captured) return sampleCaptured(clip, time, hipsHeight);
   const bones = {};
   for (const name of boneNames(clip)) {
     const [x, y, z] = sampleChannel(clip, time, "pose", name);
@@ -323,10 +358,14 @@ function blendSamples(a, b, w) {
 const smooth = (x) => x * x * (3 - 2 * x);
 
 // Plays clips with crossfades. A one-shot clip returns to `fallback` when it
-// ends unless it holds its last pose.
+// ends unless it holds its last pose. hipsHeight is the character's rest hip
+// height in metres.
 export class MotionPlayer {
-  constructor(fallback = "idle") {
+  constructor(fallback, hipsHeight) {
+    if (!CLIPS[fallback]) throw new Error(`Unknown fallback clip ${fallback}`);
+    if (!(hipsHeight > 0)) throw new Error(`MotionPlayer needs a positive hipsHeight, got ${hipsHeight}`);
     this.fallback = fallback;
+    this.hipsHeight = hipsHeight;
     this.current = { name: fallback, start: 0 };
     this.previous = null;
     this.fadeStart = 0;
@@ -355,12 +394,12 @@ export class MotionPlayer {
       this.play(this.fallback, now, { fade: 0.35 });
       for (const l of this.listeners) l(finished);
     }
-    const cur = sampleClip(CLIPS[this.current.name], now - this.current.start);
+    const cur = sampleClip(CLIPS[this.current.name], now - this.current.start, this.hipsHeight);
     if (!this.previous) return cur;
     const w = smooth(THREE.MathUtils.clamp((now - this.fadeStart) / this.fade, 0, 1));
     if (w >= 1) { this.previous = null; return cur; }
     const prevClip = CLIPS[this.previous.name];
-    const prev = sampleClip(prevClip, Math.min(this.previous.frozen, now) - this.previous.start);
+    const prev = sampleClip(prevClip, Math.min(this.previous.frozen, now) - this.previous.start, this.hipsHeight);
     return blendSamples(prev, cur, w);
   }
 }

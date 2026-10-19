@@ -5,24 +5,27 @@ import { usePathname, useRouter } from "next/navigation";
 import { ArrowRight, X } from "lucide-react";
 
 /** Gestures a step can ask for; "point" is resolved to a direction from the target's position. */
-type Gesture = "hello" | "point" | "peace" | "cheer" | "bow" | "think";
+type Gesture = "point" | "peace" | "waveBothHands" | "pointPresent" | "celebrate" | "jumpJoyful";
+/** How she travels to a step; each is a looping clip in the guide layer. */
+type Gait = "walk" | "walkHappy" | "walkCatwalk" | "strut" | "sneak" | "run" | "runHappy" | "jog" | "slideWalk" | "walkBackward";
 
 interface TourStep {
   path: string;
   /** Value of the data-guide attribute on the element the step is about. */
   target: string;
+  gait: Gait;
   gesture: Gesture;
   say: string;
 }
 
 const TOUR: TourStep[] = [
-  { path: "/", target: "home-hero", gesture: "hello", say: "Hi, I'm Vy! I live in here. Let me show you around." },
-  { path: "/", target: "home-live", gesture: "point", say: "Say or type anything here, and I sign it for you, live." },
-  { path: "/", target: "home-roles", gesture: "point", say: "Talking with someone? Pick a side. You speak or you sign, and I translate both ways." },
-  { path: "/", target: "home-explore", gesture: "point", say: "Everything else lives down here: the dictionary, practice and the call companion." },
-  { path: "/dictionary", target: "dictionary-search", gesture: "point", say: "Forgot a sign? Search for it and I'll show you how it goes." },
-  { path: "/settings", target: "settings-signer", gesture: "peace", say: "You can pick a different signer here. I'll pretend not to be hurt." },
-  { path: "/", target: "home-hero", gesture: "cheer", say: "That's the tour! Now go and say something." },
+  { path: "/", target: "home-hero", gait: "run", gesture: "waveBothHands", say: "Hi, I'm Vy! I live in here. Let me show you around." },
+  { path: "/", target: "home-live", gait: "walk", gesture: "point", say: "Say or type anything here, and I sign it for you, live." },
+  { path: "/", target: "home-roles", gait: "walkHappy", gesture: "point", say: "Talking with someone? Pick a side. You speak or you sign, and I translate both ways." },
+  { path: "/", target: "home-explore", gait: "sneak", gesture: "pointPresent", say: "Everything else lives down here: the dictionary, practice and the call companion." },
+  { path: "/dictionary", target: "dictionary-search", gait: "slideWalk", gesture: "point", say: "Forgot a sign? Search for it and I'll show you how it goes." },
+  { path: "/settings", target: "settings-signer", gait: "walkCatwalk", gesture: "peace", say: "You can pick a different signer here. I'll pretend not to be hurt." },
+  { path: "/", target: "home-hero", gait: "runHappy", gesture: "jumpJoyful", say: "That's the tour! Now go and say something." },
 ];
 
 const GUIDE_MODEL = "vy";
@@ -108,6 +111,7 @@ export function VyGuideProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== window.location.origin || e.source !== frameRef.current?.contentWindow) return;
+      if (e.data?.type === "vy-error") { setError(e.data.message); return; }
       const resolve = waiters.current.get(e.data?.type);
       if (resolve) {
         waiters.current.delete(e.data.type);
@@ -172,7 +176,7 @@ export function VyGuideProvider({ children }: { children: React.ReactNode }) {
       const feet = Math.min(Math.max(r.top + r.height / 2 + HAND_HEIGHT * height, height + EDGE_GAP_PX), H - EDGE_GAP_PX);
 
       const arrived = once("vy-arrived");
-      send({ type: "vy-walk", x, y: feet });
+      send({ type: "vy-walk", x, y: feet, gait: step.gait });
       await arrived;
       if (cancelled.current) return;
 
@@ -187,6 +191,13 @@ export function VyGuideProvider({ children }: { children: React.ReactNode }) {
       await new Promise<void>((resolve) => { advance.current = resolve; });
       advance.current = null;
     }
+    if (cancelled.current) return;
+    // She leaves the way she came in: running off the right edge.
+    setBubble(null);
+    setSpot(null);
+    const left = once("vy-arrived");
+    send({ type: "vy-walk", x: W + half * 3, y: H - EDGE_GAP_PX, gait: "run" });
+    await left;
     stop();
   }, [once, router, send, stop]);
 
@@ -266,7 +277,7 @@ function GuideBubble({ bubble, error, onNext, onClose }: { bubble: Bubble | null
           <X className="w-3.5 h-3.5" /> {bubble?.last || error ? "Close" : "Skip tour"}
         </button>
         {bubble && !error && (
-          <button onClick={bubble.last ? onClose : onNext} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-primary text-white px-4 py-2 text-[13px] font-bold shadow-pill-soft s2s-press">
+          <button onClick={onNext} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-primary text-white px-4 py-2 text-[13px] font-bold shadow-pill-soft s2s-press">
             {bubble.last ? "Done" : "Next"} <ArrowRight className="w-3.5 h-3.5" />
           </button>
         )}

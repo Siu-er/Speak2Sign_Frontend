@@ -1,0 +1,350 @@
+[
+ {
+  "name": "walk",
+  "category": "locomotion",
+  "loop": true,
+  "duration": 1.167
+ },
+ {
+  "name": "walkHappy",
+  "category": "locomotion",
+  "loop": true,
+  "duration": 1.1
+ },
+ {
+  "name": "walkCatwalk",
+  "category": "locomotion",
+  "loop": true,
+  "duration": 1.167
+ },
+ {
+  "name": "walkBackward",
+  "category": "locomotion",
+  "loop": true,
+  "duration": 0.967
+ },
+ {
+  "name": "sneak",
+  "category": "locomotion",
+  "loop": true,
+  "duration": 1.067
+ },
+ {
+  "name": "run",
+  "category": "locomotion",
+  "loop": true,
+  "duration": 0.6
+ },
+ {
+  "name": "runHappy",
+  "category": "locomotion",
+  "loop": true,
+  "duration": 0.9
+ },
+ {
+  "name": "jog",
+  "category": "locomotion",
+  "loop": true,
+  "duration": 2.567
+ },
+ {
+  "name": "strut",
+  "category": "locomotion",
+  "loop": true,
+  "duration": 1.433
+ },
+ {
+  "name": "slideWalk",
+  "category": "locomotion",
+  "loop": true,
+  "duration": 0.967
+ },
+ {
+  "name": "idleHappy",
+  "category": "idle",
+  "loop": true,
+  "duration": 2.933
+ },
+ {
+  "name": "idleWeightShift",
+  "category": "idle",
+  "loop": true,
+  "duration": 16.633
+ },
+ {
+  "name": "idleLookAround",
+  "category": "idle",
+  "loop": true,
+  "duration": 6.333
+ },
+ {
+  "name": "idleBored",
+  "category": "idle",
+  "loop": true,
+  "duration": 10.667
+ },
+ {
+  "name": "idleVictory",
+  "category": "idle",
+  "loop": true,
+  "duration": 1.667
+ },
+ {
+  "name": "waveCasual",
+  "category": "gesture",
+  "loop": false,
+  "duration": 0.533
+ },
+ {
+  "name": "waveBothHands",
+  "category": "gesture",
+  "loop": false,
+  "duration": 3.167
+ },
+ {
+  "name": "greet",
+  "category": "gesture",
+  "loop": false,
+  "duration": 5.1
+ },
+ {
+  "name": "bowFormal",
+  "category": "gesture",
+  "loop": false,
+  "duration": 2.733
+ },
+ {
+  "name": "bowQuick",
+  "category": "gesture",
+  "loop": false,
+  "duration": 2.733
+ },
+ {
+  "name": "pointForward",
+  "category": "gesture",
+  "loop": false,
+  "duration": 4.7
+ },
+ {
+  "name": "pointPresent",
+  "category": "gesture",
+  "loop": false,
+  "duration": 1.833
+ },
+ {
+  "name": "pointBehind",
+  "category": "gesture",
+  "loop": false,
+  "duration": 3.6
+ },
+ {
+  "name": "countFive",
+  "category": "gesture",
+  "loop": false,
+  "duration": 6.633
+ },
+ {
+  "name": "salute",
+  "category": "gesture",
+  "loop": false,
+  "duration": 2.833
+ },
+ {
+  "name": "tapWrist",
+  "category": "gesture",
+  "loop": false,
+  "duration": 2.833
+ },
+ {
+  "name": "talk",
+  "category": "gesture",
+  "loop": false,
+  "duration": 10.267
+ },
+ {
+  "name": "askQuestion",
+  "category": "gesture",
+  "loop": false,
+  "duration": 5.167
+ },
+ {
+  "name": "nodYes",
+  "category": "gesture",
+  "loop": false,
+  "duration": 2.6
+ },
+ {
+  "name": "shakeNo",
+  "category": "gesture",
+  "loop": false,
+  "duration": 1.8
+ },
+ {
+  "name": "clap",
+  "category": "reaction",
+  "loop": false,
+  "duration": 1.167
+ },
+ {
+  "name": "cheerFists",
+  "category": "reaction",
+  "loop": false,
+  "duration": 2.9
+ },
+ {
+  "name": "fistPump",
+  "category": "reaction",
+  "loop": false,
+  "duration": 3.8
+ },
+ {
+  "name": "excited",
+  "category": "reaction",
+  "loop": false,
+  "duration": 6.567
+ },
+ {
+  "name": "celebrate",
+  "category": "reaction",
+  "loop": false,
+  "duration": 8.533
+ },
+ {
+  "name": "shrug",
+  "category": "reaction",
+  "loop": false,
+  "duration": 2
+ },
+ {
+  "name": "ponder",
+  "category": "reaction",
+  "loop": false,
+  "duration": 4.233
+ },
+ {
+  "name": "laugh",
+  "category": "reaction",
+  "loop": false,
+  "duration": 9.767
+ },
+ {
+  "name": "startled",
+  "category": "reaction",
+  "loop": false,
+  "duration": 3.667
+ },
+ {
+  "name": "lookFar",
+  "category": "reaction",
+  "loop": false,
+  "duration": 4.767
+ },
+ {
+  "name": "lookOverShoulder",
+  "category": "reaction",
+  "loop": false,
+  "duration": 3.767
+ },
+ {
+  "name": "stretchArms",
+  "category": "reaction",
+  "loop": false,
+  "duration": 8.867
+ },
+ {
+  "name": "cry",
+  "category": "reaction",
+  "loop": false,
+  "duration": 6.267
+ },
+ {
+  "name": "jumpInPlace",
+  "category": "body",
+  "loop": false,
+  "duration": 2.433
+ },
+ {
+  "name": "jumpJoyful",
+  "category": "body",
+  "loop": false,
+  "duration": 1.867
+ },
+ {
+  "name": "spinInPlace",
+  "category": "body",
+  "loop": false,
+  "duration": 4
+ },
+ {
+  "name": "kneelDown",
+  "category": "body",
+  "loop": false,
+  "duration": 2.767
+ },
+ {
+  "name": "sitToStand",
+  "category": "body",
+  "loop": false,
+  "duration": 6.067
+ },
+ {
+  "name": "sitSwingLegs",
+  "category": "body",
+  "loop": true,
+  "duration": 2.1
+ },
+ {
+  "name": "danceSlideStep",
+  "category": "dance",
+  "loop": true,
+  "duration": 4.467
+ },
+ {
+  "name": "danceRaiseRoof",
+  "category": "dance",
+  "loop": true,
+  "duration": 4.1
+ },
+ {
+  "name": "danceRunningMan",
+  "category": "dance",
+  "loop": true,
+  "duration": 4.733
+ },
+ {
+  "name": "danceShuffle",
+  "category": "dance",
+  "loop": true,
+  "duration": 7.5
+ },
+ {
+  "name": "danceTimid",
+  "category": "dance",
+  "loop": true,
+  "duration": 13.033
+ },
+ {
+  "name": "danceTwist",
+  "category": "dance",
+  "loop": true,
+  "duration": 9.433
+ },
+ {
+  "name": "danceJazz",
+  "category": "dance",
+  "loop": true,
+  "duration": 2.267
+ },
+ {
+  "name": "danceSilly",
+  "category": "dance",
+  "loop": true,
+  "duration": 3.833
+ },
+ {
+  "name": "danceMoonwalk",
+  "category": "dance",
+  "loop": true,
+  "duration": 17.233
+ }
+]
