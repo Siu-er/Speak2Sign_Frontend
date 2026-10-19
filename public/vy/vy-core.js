@@ -268,7 +268,8 @@ function sampleCaptured(clip, time, hipsHeight) {
   const bones = {};
   const next = new THREE.Quaternion();
   for (const [name, values] of Object.entries(c.bones)) {
-    bones[name] = new THREE.Quaternion().fromArray(values, i0 * 4).slerp(next.fromArray(values, i1 * 4), u);
+    // Stored components are rounded, so each frame is renormalised to a pure rotation.
+    bones[name] = new THREE.Quaternion().fromArray(values, i0 * 4).normalize().slerp(next.fromArray(values, i1 * 4).normalize(), u);
   }
   const h = (k) => c.hips[i0 * 3 + k] + (c.hips[i1 * 3 + k] - c.hips[i0 * 3 + k]) * u;
   return {

@@ -14,6 +14,7 @@ export const SUPPORTED_LANGUAGES = [
 /** Signing characters; each id names /avatars/<id>.vrm and its portrait /avatars/<id>.png. */
 export const AVATARS = [
   { id: "vy", label: "Vy" },
+  { id: "vy-hoodie", label: "Vy (hoodie)" },
   { id: "shino", label: "Shino" },
   { id: "shibu", label: "Shibu" },
   { id: "fumiriya", label: "Fumiriya" },

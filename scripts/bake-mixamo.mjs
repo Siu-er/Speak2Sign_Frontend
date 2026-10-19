@@ -46,6 +46,30 @@ fs.mkdirSync(outDir, { recursive: true });
 
 const round = (v, digits) => Number(v.toFixed(digits));
 
+// A captured cycle rarely ends exactly where it began, which reads as a jolt
+// every time it repeats. The gap between the last frame and the first is
+// spread across the cycle, a growing fraction per frame, so the last frame
+// matches the first and the loop wraps continuously.
+function closeLoop(bones, hips, frames) {
+  const last = frames - 1;
+  const a = new THREE.Quaternion(), b = new THREE.Quaternion(), gap = new THREE.Quaternion(), part = new THREE.Quaternion();
+  const id = new THREE.Quaternion();
+  for (const values of Object.values(bones)) {
+    a.fromArray(values, 0);
+    b.fromArray(values, last * 4);
+    gap.copy(a).multiply(b.clone().invert());
+    for (let f = 1; f <= last; f++) {
+      part.copy(id).slerp(gap, f / last);
+      b.fromArray(values, f * 4).premultiply(part).normalize();
+      values.splice(f * 4, 4, round(b.x, QUAT_DIGITS), round(b.y, QUAT_DIGITS), round(b.z, QUAT_DIGITS), round(b.w, QUAT_DIGITS));
+    }
+  }
+  for (let k = 0; k < 3; k++) {
+    const d = hips[k] - hips[last * 3 + k];
+    for (let f = 1; f <= last; f++) hips[f * 3 + k] = round(hips[f * 3 + k] + (d * f) / last, HIPS_DIGITS);
+  }
+}
+
 function bake(entry) {
   const file = path.join(fbxDir, `${entry.name}.fbx`);
   const buf = fs.readFileSync(file);
@@ -99,6 +123,7 @@ function bake(entry) {
     }
   }
   if (!bones.hips || !hips) throw new Error(`${file}: missing hips tracks`);
+  if (entry.loop) closeLoop(bones, hips, frames);
   return { name: entry.name, category: entry.category, loop: entry.loop, face: entry.face ?? {}, fps: FPS, frames, bones, hips };
 }
 

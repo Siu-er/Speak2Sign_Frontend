@@ -59,7 +59,7 @@ export default function SettingsPage() {
             title="Signer"
             description="The character who signs what the other person says."
           />
-          <div className="mt-4 grid grid-cols-4 gap-2.5" role="radiogroup" aria-label="Signer">
+          <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-2.5" role="radiogroup" aria-label="Signer">
             {AVATARS.map((a) => {
               const chosen = s.avatar === a.id;
               return (
