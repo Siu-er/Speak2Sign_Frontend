@@ -27,7 +27,7 @@
 <body>
 <nav id="clips"></nav>
 <script type="module">
-  // Plays every clip of the motion library. Query: ?model=<avatar id>&clip=<name>&ui=0&camera=full|upper|face&blink=0
+  // Plays every clip of the motion library. Query: ?model=<avatar id>&clip=<name>&ui=0&camera=full|upper|face&blink=0&turn=<degrees>
   import * as THREE from "three";
   import { loadVrm, CLIPS, MotionPlayer, applySample, Life, Gaze, loadMotionIndex, loadMotions, IDLE } from "/vy/vy-core.js";
 
@@ -47,7 +47,7 @@
 
   const vrm = await loadVrm(renderer, `/avatars/${MODEL}.vrm`);
   scene.add(vrm.scene);
-  const facing = vrm.scene.rotation.y;
+  const facing = vrm.scene.rotation.y + THREE.MathUtils.degToRad(Number(q.get("turn") ?? 0));
   const hipsNode = vrm.humanoid.getNormalizedBoneNode("hips");
   const hipsRest = hipsNode.position.clone();
   const headY = vrm.humanoid.getNormalizedBoneNode("head").getWorldPosition(new THREE.Vector3()).y;

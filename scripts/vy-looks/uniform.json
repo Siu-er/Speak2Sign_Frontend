@@ -1,0 +1,140 @@
+{
+ "cuff_inner_x": [
+  127,
+  1913
+ ],
+ "cuff_length": 435,
+ "skirt_emblem": [
+  996,
+  1248,
+  1052,
+  1338
+ ],
+ "skirt_mark_y": 1290,
+ "shirt_max_x": 1700,
+ "sole_top": 935,
+ "stocking_columns": [
+  [
+   0,
+   490
+  ],
+  [
+   1560,
+   2048
+  ]
+ ],
+ "stocking_search": [
+  1140,
+  1400
+ ],
+ "plate": [
+  238,
+  556,
+  212
+ ],
+ "skirt_darken": 0.55,
+ "cup_darken": 0.4,
+ "glove_band_y": 335,
+ "glove_columns": [
+  [
+   600,
+   900
+  ],
+  [
+   1148,
+   1448
+  ]
+ ],
+ "cuff_lines_x": [
+  [
+   95,
+   121
+  ],
+  [
+   1927,
+   1953
+  ]
+ ],
+ "materials": {
+  "14": "jacket",
+  "15": "collar",
+  "13": "collar",
+  "9": "shirt_skirt",
+  "10": "skirt",
+  "12": "boots",
+  "8": "body",
+  "16": "tie",
+  "17": "glow",
+  "20": "cup_shell",
+  "21": "ring",
+  "22": "cup_plate"
+ },
+ "upscale": {
+  "16": 4
+ },
+ "tie": {
+  "tip_depth": 230,
+  "field_start": 0.04,
+  "field_gap": 40,
+  "glow": 8,
+  "flare_width": 7,
+  "gem_size": 48,
+  "glitch": {
+   "chevrons": [
+    [
+     0.47,
+     0.12,
+     1.0,
+     0.06,
+     [
+      [
+       0.3,
+       0.405,
+       0
+      ],
+      [
+       0.405,
+       0.43,
+       0.22
+      ],
+      [
+       0.43,
+       0.6,
+       0
+      ]
+     ]
+    ]
+   ],
+   "flares": [
+    [
+     0.5,
+     0.5
+    ]
+   ],
+   "lead": [
+    0.56,
+    1.03,
+    9,
+    2
+   ]
+  },
+  "gem_cut": 18,
+  "border": 9,
+  "border_light": {
+   "core": 4,
+   "whiten": 0.55,
+   "glow": 12,
+   "strength": 0.6
+  }
+ },
+ "stocking_dark": 0.2,
+ "stocking_darken": 1.0,
+ "light": {
+  "core": 3,
+  "whiten": 0.6,
+  "glow": 5,
+  "strength": 0.55
+ },
+ "black": 0.06,
+ "jacket_trim_min_v": 0.3
+}
