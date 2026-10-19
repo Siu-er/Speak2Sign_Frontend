@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Motion Lab</title>
+  <link rel="icon" href="data:," />
+  <style>
+    :root { --bg: #f4f1fb; --ink: #241b3a; --chip: #ffffff; --accent: #7c4dff; }
+    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #14101f; --ink: #efeaff; --chip: #241c38; } }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px system-ui, sans-serif; overflow: hidden; }
+    canvas { display: block; width: 100%; height: 100%; }
+    nav { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    nav.hidden { display: none; }
+    button { border: 0; border-radius: 999px; padding: 8px 14px; background: var(--chip); color: var(--ink); cursor: pointer; box-shadow: 0 2px 8px rgb(0 0 0 / 0.12); }
+    button.on { background: var(--accent); color: #fff; }
+  </style>
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/",
+      "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.5.5/lib/three-vrm.module.min.js"
+    } }
+  </script>
+</head>
+<body>
+<nav id="clips"></nav>
+<script type="module">
+  // Plays every clip of the motion library. Query: ?model=<avatar id>&clip=<name>&ui=0&camera=full|upper|face&blink=0
+  import * as THREE from "three";
+  import { loadVrm, CLIPS, MotionPlayer, applySample, Life } from "/vy/vy-core.js";
+
+  const q = new URLSearchParams(location.search);
+  const MODEL = q.get("model");
+  if (!MODEL) throw new Error("lab.html requires a ?model=<avatar id> parameter");
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.max(devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  document.body.prepend(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(22, 1, 0.1, 30);
+  const key = new THREE.DirectionalLight(0xffffff, Math.PI * 0.9);
+  key.position.set(0.6, 1.6, 2.4);
+  scene.add(key, new THREE.AmbientLight(0xffffff, 0.4));
+
+  const vrm = await loadVrm(renderer, `/avatars/${MODEL}.vrm`);
+  scene.add(vrm.scene);
+  const facing = vrm.scene.rotation.y;
+  const hipsNode = vrm.humanoid.getNormalizedBoneNode("hips");
+  const hipsRest = hipsNode.position.clone();
+  const headY = vrm.humanoid.getNormalizedBoneNode("head").getWorldPosition(new THREE.Vector3()).y;
+
+  function frame() {
+    const w = innerWidth, h = innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    const shot = q.get("camera") ?? "full";
+    const [top, bottom, halfWidth] = {
+      full: [headY + 0.45, -0.05, 0.9],
+      upper: [headY + 0.45, headY * 0.55, 0.9],
+      face: [headY + 0.3, headY - 0.1, 0.2],
+    }[shot];
+    const half = THREE.MathUtils.degToRad(camera.fov / 2);
+    const dist = Math.max((top - bottom) / 2 / Math.tan(half), halfWidth / (Math.tan(half) * camera.aspect));
+    const cy = (top + bottom) / 2;
+    camera.position.set(0, cy, dist);
+    camera.lookAt(0, cy, 0);
+    camera.updateProjectionMatrix();
+  }
+  addEventListener("resize", frame);
+  frame();
+
+  const player = new MotionPlayer("idle");
+  const life = new Life();
+  const nav = document.getElementById("clips");
+  if (q.get("ui") === "0") nav.classList.add("hidden");
+  const buttons = {};
+  for (const name of Object.keys(CLIPS)) {
+    const b = document.createElement("button");
+    b.textContent = name;
+    b.onclick = () => select(name);
+    nav.append(b);
+    buttons[name] = b;
+  }
+  function select(name) {
+    player.play(name, clock.elapsedTime);
+    for (const [n, b] of Object.entries(buttons)) b.classList.toggle("on", n === name);
+  }
+  player.onFinish(() => { for (const b of Object.values(buttons)) b.classList.remove("on"); });
+
+  const clock = new THREE.Clock();
+  let springsReady = false;
+  window.vyLab = { play: select, time: () => clock.elapsedTime };
+  if (q.get("clip")) select(q.get("clip"));
+
+  renderer.setAnimationLoop(() => {
+    const dt = Math.min(clock.getDelta(), 1 / 30);
+    const t = clock.elapsedTime;
+    const s = player.sample(t);
+    applySample(vrm, s, hipsRest);
+    vrm.scene.rotation.y = facing + s.turn;
+    life.apply(vrm, t);
+    if (q.get("blink") === "0") vrm.expressionManager?.setValue("blink", 0);
+    if (!springsReady) {
+      vrm.scene.updateMatrixWorld(true);
+      vrm.springBoneManager?.reset();
+      springsReady = true;
+    }
+    vrm.update(dt);
+    renderer.render(scene, camera);
+  });
+  window.vyLabReady = true;
+</script>
+</body>
+</html>

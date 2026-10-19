@@ -77,7 +77,7 @@ export default function DictionaryPage() {
 
       <div className="flex flex-col gap-3 lg:gap-4 min-h-0 flex-1">
       {/* search */}
-      <div className="flex items-center gap-2 s2s-card rounded-full px-4 py-2.5 lg:py-3.5 lg:px-5">
+      <div data-guide="dictionary-search" className="flex items-center gap-2 s2s-card rounded-full px-4 py-2.5 lg:py-3.5 lg:px-5">
         <Search className="w-4 h-4 text-muted-foreground shrink-0" />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search a word" aria-label="Search a word" className="flex-1 bg-transparent outline-none text-[15px] font-medium min-w-0" />
       </div>

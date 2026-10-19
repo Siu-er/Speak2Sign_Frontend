@@ -13,6 +13,7 @@ export const SUPPORTED_LANGUAGES = [
 
 /** Signing characters; each id names /avatars/<id>.vrm and its portrait /avatars/<id>.png. */
 export const AVATARS = [
+  { id: "vy", label: "Vy" },
   { id: "shino", label: "Shino" },
   { id: "shibu", label: "Shibu" },
   { id: "fumiriya", label: "Fumiriya" },
@@ -44,7 +45,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   highContrast: false,
   haptic: false,
   recordingHistory: true,
-  avatar: "shino",
+  avatar: "vy",
   showLandmarks: false,
 };
 

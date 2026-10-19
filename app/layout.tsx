@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/app/components/ui/tooltip";
 import { ReactQueryProvider } from '@/app/providers'
 import { Backdrop } from '@/app/components/shell/Backdrop'
 import { DesktopSidebar } from '@/app/components/shell/DesktopSidebar'
+import { VyGuideProvider } from '@/app/components/guide/VyGuide'
 import '@/app/globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
@@ -35,9 +36,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <Backdrop />
-            <DesktopSidebar />
-            {children}
+            <VyGuideProvider>
+              <Backdrop />
+              <DesktopSidebar />
+              {children}
+            </VyGuideProvider>
           </TooltipProvider>
         </ReactQueryProvider>
       </body>

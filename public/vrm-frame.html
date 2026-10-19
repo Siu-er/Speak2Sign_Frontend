@@ -135,7 +135,8 @@
     import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
     import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 
-    const MODEL = new URLSearchParams(location.search).get("model") || "shino";
+    const MODEL = new URLSearchParams(location.search).get("model");
+    if (!MODEL) throw new Error("vrm-frame.html requires a ?model=<avatar id> parameter");
     // JASigning publishes frames at its animation rate; rendering one frame
     // behind lets every displayed pose interpolate between two real frames.
     const FRAME_DELAY_MS = 40;

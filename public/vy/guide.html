@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Guide</title>
+  <link rel="icon" href="data:," />
+  <style>html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; } canvas { display: block; }</style>
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/",
+      "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.5.5/lib/three-vrm.module.min.js"
+    } }
+  </script>
+</head>
+<body>
+<script type="module">
+  // A character who lives on top of the page. The orthographic camera maps CSS
+  // pixels to the scene with y down, so the parent page places her by screen
+  // coordinates: { type: "vy-walk", x, y } moves her feet to (x, y).
+  //
+  // Messages in:  vy-config { height }  vy-place { x, y }  vy-walk { x, y }
+  //               vy-play { clip }      vy-face { side: "left" | "right" | "front" }
+  // Messages out: vy-ready, vy-arrived, vy-clip-done { clip }
+  import * as THREE from "three";
+  import { loadVrm, CLIPS, MotionPlayer, applySample, Life, clipDuration } from "/vy/vy-core.js";
+
+  const MODEL = new URLSearchParams(location.search).get("model");
+  if (!MODEL) throw new Error("guide.html requires a ?model=<avatar id> parameter");
+  // Walking pace in body heights per second; one walk-cycle stride covers
+  // about this distance at the clip's cadence.
+  const WALK_HEIGHTS_PER_S = 0.55;
+  // Turning towards the direction of travel, as a three-quarter view so the
+  // face stays readable.
+  const WALK_TURN = THREE.MathUtils.degToRad(62);
+  const TURN_RATE = 9;
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(Math.max(devicePixelRatio, 1.5), 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  document.body.append(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(0, 1, 0, 1, -50, 50);
+  const key = new THREE.DirectionalLight(0xffffff, Math.PI * 0.9);
+  key.position.set(0.6, 1.6, 2.4);
+  scene.add(key, new THREE.AmbientLight(0xffffff, 0.45));
+
+  addEventListener("resize", () => renderer.setSize(innerWidth, innerHeight));
+  renderer.setSize(innerWidth, innerHeight);
+
+  const vrm = await loadVrm(renderer, `/avatars/${MODEL}.vrm`);
+  const rig = new THREE.Group();
+  rig.add(vrm.scene);
+  scene.add(rig);
+  const hipsRest = vrm.humanoid.getNormalizedBoneNode("hips").position.clone();
+  const facing0 = vrm.scene.rotation.y;
+  vrm.scene.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(vrm.scene);
+  const modelHeight = box.max.y - box.min.y;
+
+  const state = { x: -9999, y: 0, tx: 0, ty: 0, walking: false, heightPx: 300, turn: 0, turnTarget: 0 };
+  const player = new MotionPlayer("idle");
+  const life = new Life();
+  const clock = new THREE.Clock();
+  const post = (msg) => parent.postMessage(msg, location.origin);
+  player.onFinish((clip) => post({ type: "vy-clip-done", clip }));
+
+  addEventListener("message", (e) => {
+    if (e.origin !== location.origin) return;
+    const m = e.data;
+    const now = clock.elapsedTime;
+    if (m.type === "vy-config") state.heightPx = m.height;
+    if (m.type === "vy-place") { state.x = state.tx = m.x; state.y = state.ty = m.y; }
+    if (m.type === "vy-walk") {
+      state.tx = m.x; state.ty = m.y;
+      if (Math.hypot(state.tx - state.x, state.ty - state.y) < 2) { post({ type: "vy-arrived" }); return; }
+      state.walking = true;
+      state.turnTarget = Math.sign(state.tx - state.x) * WALK_TURN;
+      player.play("walk", now, { fade: 0.2 });
+    }
+    if (m.type === "vy-play") {
+      if (!CLIPS[m.clip]) throw new Error(`Unknown clip ${m.clip}`);
+      player.play(m.clip, now);
+      if (CLIPS[m.clip].hold) setTimeout(() => post({ type: "vy-clip-done", clip: m.clip }), clipDuration(CLIPS[m.clip]) * 1000);
+    }
+    if (m.type === "vy-face") state.turnTarget = { left: -0.5, right: 0.5, front: 0 }[m.side];
+  });
+
+  let springsReady = false;
+  renderer.setAnimationLoop(() => {
+    const dt = Math.min(clock.getDelta(), 1 / 30);
+    const now = clock.elapsedTime;
+    if (state.walking) {
+      const dx = state.tx - state.x, dy = state.ty - state.y;
+      const dist = Math.hypot(dx, dy);
+      const step = WALK_HEIGHTS_PER_S * state.heightPx * dt;
+      if (dist <= step) {
+        state.x = state.tx; state.y = state.ty;
+        state.walking = false;
+        state.turnTarget = 0;
+        player.play("idle", now, { fade: 0.25 });
+        post({ type: "vy-arrived" });
+      } else {
+        state.x += (dx / dist) * step; state.y += (dy / dist) * step;
+      }
+    }
+    state.turn += (state.turnTarget - state.turn) * Math.min(1, dt * TURN_RATE);
+
+    const s = player.sample(now);
+    applySample(vrm, s, hipsRest);
+    life.apply(vrm, now);
+    vrm.scene.rotation.y = facing0 + state.turn + s.turn;
+
+    // The character stays at true scale so spring bones simulate in metres;
+    // the camera is scaled instead, at heightPx CSS pixels per body height.
+    const ppm = state.heightPx / modelHeight;
+    camera.left = 0; camera.right = innerWidth / ppm; camera.top = 0; camera.bottom = -innerHeight / ppm;
+    camera.updateProjectionMatrix();
+    rig.position.set(state.x / ppm, -state.y / ppm - box.min.y, 0);
+    if (!springsReady) {
+      vrm.scene.updateMatrixWorld(true);
+      vrm.springBoneManager?.reset();
+      springsReady = true;
+    }
+    vrm.update(dt);
+    renderer.render(scene, camera);
+  });
+  post({ type: "vy-ready" });
+</script>
+</body>
+</html>

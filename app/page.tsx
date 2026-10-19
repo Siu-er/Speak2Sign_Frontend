@@ -2,12 +2,13 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Mic, Video, Sparkles, BookOpen, Target, MonitorPlay, QrCode, X, ArrowRight } from "lucide-react";
+import { Mic, Video, Sparkles, BookOpen, Target, MonitorPlay, QrCode, X, ArrowRight, Footprints } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { AppShell } from "@/app/components/shell/AppShell";
 import { TopHeader } from "@/app/components/shell/TopHeader";
 import { SignAvatar, AvatarClip } from "@/app/components/avatar/SignAvatar";
 import { textToSign } from "@/app/lib/pipeline/backend";
+import { useGuide } from "@/app/components/guide/VyGuide";
 
 export default function HomePage() {
   const [showQR, setShowQR] = useState(false);
@@ -15,6 +16,7 @@ export default function HomePage() {
   const [greeting, setGreeting] = useState<AvatarClip[]>([]);
   const [greetError, setGreetError] = useState("");
   const greeted = useRef(false);
+  const guide = useGuide();
 
   useEffect(() => { setUrl(window.location.origin); }, []);
 
@@ -34,15 +36,23 @@ export default function HomePage() {
       {/* Phones: one column. Desktop: heading and roles on the left, the signer's
           stage on the right, the explore row across the bottom. */}
       <main className="px-5 pb-6 flex-1 flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.82fr)] lg:grid-rows-[auto_1fr_auto] lg:gap-x-10 lg:px-12 lg:pt-12 lg:pb-10">
-        <section className="animate-fade-up lg:col-start-1 lg:row-start-1">
+        <section data-guide="home-hero" className="animate-fade-up lg:col-start-1 lg:row-start-1">
           <h1 className="s2s-heading text-[30px] leading-[1.08] lg:text-[56px] lg:leading-[1.02] lg:max-w-[14ch]">How would you like to communicate?</h1>
           <p className="mt-2 text-muted-foreground text-[14px] leading-relaxed max-w-[34ch] lg:mt-4 lg:text-[18px] lg:max-w-[40ch]">
             Start a live conversation, or explore the other ways to use sign language.
           </p>
+          <button
+            onClick={guide.start}
+            disabled={guide.running}
+            className="mt-3 inline-flex items-center gap-2 rounded-full s2s-card px-4 py-2 text-[13px] font-bold text-primary s2s-press disabled:opacity-60 lg:mt-5 lg:text-[14px]"
+          >
+            <Footprints className="w-4 h-4" /> Take the tour with Vy
+          </button>
         </section>
 
         <Link
           href="/live"
+          data-guide="home-live"
           className="mt-5 s2s-card s2s-press s2s-lift flex items-stretch gap-3 p-2.5 animate-fade-up lg:mt-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:flex-col lg:gap-0 lg:p-3 lg:rounded-[32px]"
           style={{ animationDelay: "80ms" }}
         >
@@ -58,14 +68,14 @@ export default function HomePage() {
           </div>
         </Link>
 
-        <div className="mt-4 grid grid-cols-2 gap-3 lg:col-start-1 lg:row-start-2 lg:self-start lg:mt-12 lg:gap-5">
+        <div data-guide="home-roles" className="mt-4 grid grid-cols-2 gap-3 lg:col-start-1 lg:row-start-2 lg:self-start lg:mt-12 lg:gap-5">
           <RoleCard href="/pair?role=speaker" icon={<Mic className="w-6 h-6" />} title="I speak" description="Talk, we translate to sign" delay={140} surface="primary" />
           <RoleCard href="/pair?role=signer" icon={<Video className="w-6 h-6" />} title="I sign" description="Sign, we voice it" delay={200} surface="ink" />
         </div>
 
         <div className="lg:col-span-2 lg:row-start-3 lg:mt-10">
         <h2 className="mt-6 mb-2.5 s2s-label text-muted-foreground lg:mt-0 lg:mb-3">Explore</h2>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
+        <div data-guide="home-explore" className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
           <FeatureTile href="/live" icon={<Sparkles className="w-5 h-5" />} title="Live Sign" subtitle="Speak or type, watch it signed" tint="teal" delay={260} />
           <FeatureTile href="/dictionary" icon={<BookOpen className="w-5 h-5" />} title="Dictionary" subtitle="Look up any sign" tint="indigo" delay={300} />
           <FeatureTile href="/practice" icon={<Target className="w-5 h-5" />} title="Practice" subtitle="Learn signs, get scored" tint="amber" delay={340} />

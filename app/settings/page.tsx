@@ -53,13 +53,13 @@ export default function SettingsPage() {
         </div>
 
         {/* Avatar */}
-        <div className="mt-4 s2s-card p-5 lg:mt-0 lg:mb-6 break-inside-avoid">
+        <div data-guide="settings-signer" className="mt-4 s2s-card p-5 lg:mt-0 lg:mb-6 break-inside-avoid">
           <SettingHead
             icon={<User className="w-4 h-4" />}
             title="Signer"
             description="The character who signs what the other person says."
           />
-          <div className="mt-4 grid grid-cols-3 gap-2.5" role="radiogroup" aria-label="Signer">
+          <div className="mt-4 grid grid-cols-4 gap-2.5" role="radiogroup" aria-label="Signer">
             {AVATARS.map((a) => {
               const chosen = s.avatar === a.id;
               return (
