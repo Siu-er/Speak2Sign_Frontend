@@ -18,10 +18,12 @@ glove bands and boot soles, shared out between the three colours; the hoodie's
 facings and panels; the ear glow and headphone ring; a black tie carrying a
 glitched V, a lead of light and a diamond cut by an X; decals drawn in body
 coordinates (the back emblem, the skirt sigil and Vy's mark on the stockings).
-Viet's: a black tactical parka whose printed accents take the three colours, a navy
-collar lining with a lit rim, lines round the cuffs and hem, a chest mark, a light down
-each side of the zip and a back sigil with circuit traces; cargo shorts over knee-high
-knit socks with a lit outer stripe; high-tops with lit soles. Both have gradient hair
+Viet's: a black tactical parka with a deep blue hex-mesh panel round its lower half, its
+printed accents in the three colours, a navy collar lining with a lit rim, lines round the
+cuffs and hem, a chest mark, a light down each side of the zip and a back sigil with
+circuit traces; cargo shorts with a blue lower block, thigh marks and lit hem lines over
+knee-high knit socks that fade to navy, with a chevron band and a lit outer stripe;
+high-tops with lit soles. Both have gradient hair
 with highlights that tint its own shading.
 """
 import io, json, struct, sys
@@ -710,8 +712,25 @@ def techwear(a, hn, spec, lit):
     with the cloth around them; accent texels inside each "accents" box take a colour family,
     scaled by its "gain" and shaded by their own brightness so a print keeps its detail, and with "lit" turn into light;
     accent texels in a "solid" box become a plain colour keeping their shading; light grey
-    texels in a "greys" box take a family; boxes in "lines" are drawn as lines of light."""
+    texels in a "greys" box take a family; boxes in "lines" are drawn as lines of light.
+    A "panels" item colours a whole cloth panel: inside its box, the unsaturated texels whose
+    tone, averaged over "smooth" texels, is at least "min_tone" (which tells one panel's cloth
+    from its neighbour's) take the family running from levels[0] at the panel's lowest point to
+    levels[1] at its highest, shaded by their own value so the weave and folds still show."""
     out = a
+    for item in spec.get("panels", []):
+        s, v = hsv(out)
+        m = boxes_mask(v.shape, [item["box"]]) & (s < 0.2) & (out[..., 3] > 0.5)
+        m &= nd.uniform_filter(v, item["smooth"]) >= item["min_tone"]
+        if not m.any():
+            raise ValueError(f"no panel texels in box {item['box']}")
+        h0, h1 = np.percentile(hn[m], [2, 98])
+        up = np.clip((hn - h0) / max(h1 - h0, 1e-6), 0, 1)
+        lo, hi = item["levels"]
+        shade = np.clip(v / np.median(v[m]), 0.5, 2.4)[..., None]
+        colour = np.clip(ramp(lo + (hi - lo) * up, item["family"]) * item["gain"] * shade, 0, 1)
+        out = out.copy()
+        out[..., :3] = np.where(m[..., None], colour, out[..., :3])
     for box in spec.get("clear", []):
         out = fill_hole(out, box)
     acc = accent_mask(out)
@@ -798,22 +817,40 @@ def layers(a, hn, lay, pmap, nmap, covered):
 
 def socks(a, lay, pmap, nmap, covered):
     """Knee-high knit socks from inside the shoe to under the shorts: fine cords round the leg,
-    a ribbed band below the knee, and a stripe of light down the outside of each calf."""
+    knit fading into a deep ankle colour, a ribbed band below the knee, a jacquard band of
+    chevrons knitted round the calf, and a stripe of light down the outside of each calf."""
     S = lay["socks"]
     x, y, z = pmap[..., 0], pmap[..., 1], pmap[..., 2]
     leg = covered & (y > S["bottom"]) & (y < S["top"]) & (np.abs(x) < S["half_width"])
     out = a.copy()
     cords = np.zeros(y.shape)
+    around = np.zeros(y.shape)
     for side in (-1, 1):
         m = leg & (np.sign(x) == side)
         xc, zc = x[m].mean(), z[m].mean()
-        cords[m] = (0.5 + 0.5 * np.sin(np.arctan2(z - zc, x - xc) * S["cords"]))[m]
+        angle = np.arctan2(z - zc, x - xc)
+        cords[m] = (0.5 + 0.5 * np.sin(angle * S["cords"]))[m]
+        around[m] = ((angle + np.pi) / (2 * np.pi))[m]
     knit = (1 - S["knit"] + S["knit"] * cords)[..., None]
     rib = leg & (y > S["rib"][0]) & (y < S["rib"][1])
-    out[..., :3] = np.where(leg[..., None], np.array(S["colour"]) * knit, out[..., :3])
+    # The knit fades from its own colour into the ankle colour towards the shoe.
+    f0, f1 = S["fade"]
+    fade = (np.clip((f0 - y) / (f0 - f1), 0, 1) ** 1.5)[..., None]
+    base = np.array(S["colour"]) * (1 - fade) + np.array(S["ankle_colour"]) * fade
+    out[..., :3] = np.where(leg[..., None], base * knit, out[..., :3])
     rib_knit = (1 - 2 * S["knit"] + 2 * S["knit"] * cords)[..., None]
     out[..., :3] = np.where(rib[..., None], np.array(S["rib_colour"]) * rib_knit, out[..., :3])
-    stripe = leg & ~rib & (y < S["rib"][0]) & (nmap[..., 0] * np.sign(x) > np.cos(S["stripe_half_angle"]))
+    # Chevrons: each row of the jacquard is a zigzag round the leg, nested inside the band.
+    J = S["jacquard"]
+    j0, j1 = J["band"]
+    t = (y - j0) / (j1 - j0)
+    zig = np.abs(2 * ((around * J["count"]) % 1) - 1)
+    jac = np.zeros(y.shape, bool)
+    for offset in J["rows"]:
+        jac |= np.abs(t - (offset + J["depth"] * zig)) < J["thickness"]
+    jac &= leg & (t >= 0) & (t <= 1)
+    out[..., :3] = np.where(jac[..., None], np.array(J["colour"]) * rib_knit, out[..., :3])
+    stripe = leg & ~rib & ~jac & (y < S["rib"][0]) & (nmap[..., 0] * np.sign(x) > np.cos(S["stripe_half_angle"]))
     level = np.clip((y - S["bottom"]) / (S["rib"][0] - S["bottom"]), 0, 1)
     out[..., :3] = np.where(stripe[..., None], ramp(0.45 + 0.4 * level, S["stripe_family"]), out[..., :3])
     return light(out, stripe, lay["light"])
