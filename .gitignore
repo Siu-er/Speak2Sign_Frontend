@@ -37,3 +37,4 @@ public/test-videos
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo
 .vercel
+__pycache__/
