@@ -18,10 +18,11 @@ glove bands and boot soles, shared out between the three colours; the hoodie's
 facings and panels; the ear glow and headphone ring; a black tie carrying a
 glitched V, a lead of light and a diamond cut by an X; decals drawn in body
 coordinates (the back emblem, the skirt sigil and Vy's mark on the stockings).
-Viet's: a black bomber with a lined funnel collar, light along its open front and
-round its cuffs and hem, a chest mark and a back sigil, the sweatshirt, shirt collar
-and shirt hem he wears under it, and a line above his boot soles. Both have gradient
-hair with highlights that tint its own shading.
+Viet's: a black tactical parka whose printed accents take the three colours, a navy
+collar lining with a lit rim, lines round the cuffs and hem, a chest mark, a light down
+each side of the zip and a back sigil with circuit traces; cargo shorts over knee-high
+knit socks with a lit outer stripe; high-tops with lit soles. Both have gradient hair
+with highlights that tint its own shading.
 """
 import io, json, struct, sys
 import numpy as np
@@ -691,34 +692,62 @@ def recolour(a, hn, lay):
     out[..., :3] = np.where(inside[..., None], np.clip(np.array(spec["colour"]) * shade, 0, 1), a[..., :3])
     return out
 
-def cloth(a, hn, lay):
-    """A garment that keeps its own colours and takes only decals or bands."""
-    return a
-
 def boxes_mask(shape, boxes):
     m = np.zeros(shape, bool)
     for x0, y0, x1, y1 in boxes:
         m[y0:y1, x0:x1] = True
     return m
 
-def bomber(a, hn, lay):
-    """Viet's open jacket: black cloth keeping its folds, a lining inside the collar, light along
-    the open front edges, and lines of light round the cuffs and the hem."""
-    b = lay["bomber"]
-    inside = a[..., 3] > 0.5
-    lum = a[..., :3].max(-1)
-    shade = np.clip(lum / np.median(lum[inside]), 0.4, 1.8)[..., None]
-    lining = boxes_mask(inside.shape, b["lining"]) & inside
-    out = a.copy()
-    out[..., :3] = np.where(inside[..., None], np.clip(np.array(b["colour"]) * shade, 0, 1), a[..., :3])
-    out[..., :3] = np.where(lining[..., None], np.array(b["lining_colour"]), out[..., :3])
-    # The open front is the transparent strip between the front panels; its border is the edge.
-    edge = boxes_mask(inside.shape, b["edge_boxes"]) & inside & (nd.distance_transform_edt(inside) <= b["edge_width"])
-    out = paint(out, edge, hn, lit=lay["light"], family=b["edge_family"])
-    for x0, y0, x1, y1, family in b["lines"]:
-        m = boxes_mask(inside.shape, [(x0, y0, x1, y1)]) & inside
-        out = paint(out, m, hn, m, lay["light"], family)
+def accent_mask(a):
+    """The garment's printed accent colour: warm saturated texels (the set's orange), including
+    the antialiased fringe where an accent fades into black cloth."""
+    s, v = hsv(a)
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    return (s > 0.35) & (v > 0.06) & (r >= g) & (g >= b) & (r - b > 0.12) & (a[..., 3] > 0.5)
+
+def techwear(a, hn, spec, lit):
+    """Bring a bought techwear garment into the signature. Prints listed in "clear" are filled
+    with the cloth around them; accent texels inside each "accents" box take a colour family,
+    scaled by its "gain" and shaded by their own brightness so a print keeps its detail, and with "lit" turn into light;
+    accent texels in a "solid" box become a plain colour keeping their shading; light grey
+    texels in a "greys" box take a family; boxes in "lines" are drawn as lines of light."""
+    out = a
+    for box in spec.get("clear", []):
+        out = fill_hole(out, box)
+    acc = accent_mask(out)
+    _, v = hsv(out)
+    for item in spec.get("solid", []):
+        m = boxes_mask(acc.shape, [item["box"]]) & acc
+        out = out.copy()
+        out[..., :3] = np.where(m[..., None], np.array(item["colour"]) * np.clip(v / np.percentile(v[m], 90), 0.3, 1.2)[..., None], out[..., :3])
+    for item in spec.get("accents", []):
+        m = boxes_mask(acc.shape, [item["box"]]) & acc
+        if not m.any():
+            raise ValueError(f"no accent texels in box {item['box']}")
+        col = sweep(m, hn, m if item.get("wrap") else None, item["family"]) * item.get("gain", 1.0)
+        out = out.copy()
+        out[..., :3] = np.where(m[..., None], np.clip(col * np.clip(v / np.percentile(v[m], 90), 0, 1.15)[..., None], 0, 1), out[..., :3])
+        if item.get("lit"):
+            out = light(out, m & (v > 0.35), lit)
+    s, v = hsv(out)
+    for item in spec.get("greys", []):
+        m = boxes_mask(v.shape, [item["box"]]) & (s < 0.2) & (v > item.get("min_v", 0.15)) & (out[..., 3] > 0.5)
+        if not m.any():
+            raise ValueError(f"no grey texels in box {item['box']}")
+        out = paint(out, m, hn, lit=lit if item.get("lit") else None, family=item["family"])
+    for x0, y0, x1, y1, family in spec.get("lines", []):
+        m = boxes_mask(v.shape, [(x0, y0, x1, y1)]) & (out[..., 3] > 0.5)
+        out = paint(out, m, hn, m, lit, family)
     return out
+
+def parka(a, hn, lay):
+    return techwear(a, hn, lay["parka"], lay["light"])
+
+def cargo(a, hn, lay):
+    return techwear(a, hn, lay["cargo"], lay["light"])
+
+def sneakers(a, hn, lay):
+    return techwear(a, hn, lay["sneakers"], lay["light"])
 
 def front_mask(pmap, nmap, covered, polys, width=0.0):
     """Texels under polygons drawn in metres in the front view (x across, y up), on surfaces facing
@@ -765,9 +794,31 @@ def layers(a, hn, lay, pmap, nmap, covered):
     fill = front_mask(pmap, nmap, covered, L["collar_points"])[..., None]
     out[..., :3] = out[..., :3] * (1 - fill) + np.array(L["shirt"]) * fill
     out[..., 3] = np.where(worn, 1.0, out[..., 3])
-    return out
+    return socks(out, lay, pmap, nmap, covered) if "socks" in lay else out
 
-ROLES = {f.__name__: f for f in (recolour, hair, hair_strands, hair_cap, hair_glow, jacket, hoodie, collar, shirt_skirt, skirt, boots, body, tie, glow, cup_shell, ring, cup_plate, cloth, bomber, layers)}
+def socks(a, lay, pmap, nmap, covered):
+    """Knee-high knit socks from inside the shoe to under the shorts: fine cords round the leg,
+    a ribbed band below the knee, and a stripe of light down the outside of each calf."""
+    S = lay["socks"]
+    x, y, z = pmap[..., 0], pmap[..., 1], pmap[..., 2]
+    leg = covered & (y > S["bottom"]) & (y < S["top"]) & (np.abs(x) < S["half_width"])
+    out = a.copy()
+    cords = np.zeros(y.shape)
+    for side in (-1, 1):
+        m = leg & (np.sign(x) == side)
+        xc, zc = x[m].mean(), z[m].mean()
+        cords[m] = (0.5 + 0.5 * np.sin(np.arctan2(z - zc, x - xc) * S["cords"]))[m]
+    knit = (1 - S["knit"] + S["knit"] * cords)[..., None]
+    rib = leg & (y > S["rib"][0]) & (y < S["rib"][1])
+    out[..., :3] = np.where(leg[..., None], np.array(S["colour"]) * knit, out[..., :3])
+    rib_knit = (1 - 2 * S["knit"] + 2 * S["knit"] * cords)[..., None]
+    out[..., :3] = np.where(rib[..., None], np.array(S["rib_colour"]) * rib_knit, out[..., :3])
+    stripe = leg & ~rib & (y < S["rib"][0]) & (nmap[..., 0] * np.sign(x) > np.cos(S["stripe_half_angle"]))
+    level = np.clip((y - S["bottom"]) / (S["rib"][0] - S["bottom"]), 0, 1)
+    out[..., :3] = np.where(stripe[..., None], ramp(0.45 + 0.4 * level, S["stripe_family"]), out[..., :3])
+    return light(out, stripe, lay["light"])
+
+ROLES = {f.__name__: f for f in (recolour, hair, hair_strands, hair_cap, hair_glow, jacket, hoodie, collar, shirt_skirt, skirt, boots, body, tie, glow, cup_shell, ring, cup_plate, parka, cargo, sneakers, layers)}
 NEEDS_COVERAGE = {ring, tie}
 NEEDS_SURFACE = {layers}
 
