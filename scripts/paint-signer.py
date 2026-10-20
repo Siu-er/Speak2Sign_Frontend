@@ -1,10 +1,11 @@
-"""Paint Vy's signature into a VRoid export of one of her looks.
+"""Paint the signature into a VRoid export of a signer's look.
 
-  python scripts/paint-vy.py assets/vy/uniform-export.vrm public/avatars/vy.vrm scripts/vy-looks/uniform.json
-  python scripts/paint-vy.py assets/vy/hoodie-export.vrm public/avatars/vy-hoodie.vrm scripts/vy-looks/hoodie.json
+  python scripts/paint-signer.py assets/vy/uniform-export.vrm public/avatars/vy.vrm scripts/signer-looks/uniform.json
+  python scripts/paint-signer.py assets/vy/hoodie-export.vrm public/avatars/vy-hoodie.vrm scripts/signer-looks/hoodie.json
+  python scripts/paint-signer.py assets/viet/viet-export.vrm public/avatars/viet.vrm scripts/signer-looks/viet.json
 
-The exports come from the VRoid Studio projects beside them in assets/vy. Requires
-numpy, scipy and Pillow. The look file maps the export's material indices to the
+The exports come from the VRoid Studio projects beside them in assets/vy and assets/viet.
+Requires numpy, scipy and Pillow. The look file maps the export's material indices to the
 roles below, holds the texel positions each role draws at (measured on that
 export's texture layout, so a re-export with a changed outfit needs them measured
 again), and names the colour family of every line group and accent.
@@ -12,12 +13,15 @@ again), and names the colour family of every line group and accent.
 Black and white stay the base. The signature is drawn as light in the three colours
 of the app icon, blue, red and amber, each grading within its piece from deep to
 bright: thin lines have a core that whitens towards its centre and a halo of their
-own colour. The pieces: piping, cuff and pin lines, the skirt band, stocking welts,
+own colour. Vy's pieces: piping, cuff and pin lines, the skirt band, stocking welts,
 glove bands and boot soles, shared out between the three colours; the hoodie's
 facings and panels; the ear glow and headphone ring; a black tie carrying a
 glitched V, a lead of light and a diamond cut by an X; decals drawn in body
-coordinates (the back emblem, the skirt sigil and Vy's mark on the stockings);
-and gradient hair with highlights that tint its own shading.
+coordinates (the back emblem, the skirt sigil and Vy's mark on the stockings).
+Viet's: a black bomber with a lined funnel collar, light along its open front and
+round its cuffs and hem, a chest mark and a back sigil, the sweatshirt, shirt collar
+and shirt hem he wears under it, and a line above his boot soles. Both have gradient
+hair with highlights that tint its own shading.
 """
 import io, json, struct, sys
 import numpy as np
@@ -687,8 +691,95 @@ def recolour(a, hn, lay):
     out[..., :3] = np.where(inside[..., None], np.clip(np.array(spec["colour"]) * shade, 0, 1), a[..., :3])
     return out
 
-ROLES = {f.__name__: f for f in (recolour, hair, hair_strands, hair_cap, hair_glow, jacket, hoodie, collar, shirt_skirt, skirt, boots, body, tie, glow, cup_shell, ring, cup_plate)}
+def cloth(a, hn, lay):
+    """A garment that keeps its own colours and takes only decals or bands."""
+    return a
+
+def boxes_mask(shape, boxes):
+    m = np.zeros(shape, bool)
+    for x0, y0, x1, y1 in boxes:
+        m[y0:y1, x0:x1] = True
+    return m
+
+def bomber(a, hn, lay):
+    """Viet's open jacket: black cloth keeping its folds, a lining inside the collar, light along
+    the open front edges, and lines of light round the cuffs and the hem."""
+    b = lay["bomber"]
+    inside = a[..., 3] > 0.5
+    lum = a[..., :3].max(-1)
+    shade = np.clip(lum / np.median(lum[inside]), 0.4, 1.8)[..., None]
+    lining = boxes_mask(inside.shape, b["lining"]) & inside
+    out = a.copy()
+    out[..., :3] = np.where(inside[..., None], np.clip(np.array(b["colour"]) * shade, 0, 1), a[..., :3])
+    out[..., :3] = np.where(lining[..., None], np.array(b["lining_colour"]), out[..., :3])
+    # The open front is the transparent strip between the front panels; its border is the edge.
+    edge = boxes_mask(inside.shape, b["edge_boxes"]) & inside & (nd.distance_transform_edt(inside) <= b["edge_width"])
+    out = paint(out, edge, hn, lit=lay["light"], family=b["edge_family"])
+    for x0, y0, x1, y1, family in b["lines"]:
+        m = boxes_mask(inside.shape, [(x0, y0, x1, y1)]) & inside
+        out = paint(out, m, hn, m, lay["light"], family)
+    return out
+
+def front_mask(pmap, nmap, covered, polys, width=0.0):
+    """Texels under polygons drawn in metres in the front view (x across, y up), on surfaces facing
+    the front; with width, the polygons' outlines of that width instead."""
+    xs = [p[0] for q in polys for p in q]
+    ys = [p[1] for q in polys for p in q]
+    ox, oy = min(xs) - 0.02, min(ys) - 0.02
+    W, H = int((max(xs) - ox + 0.02) * 1000) + 1, int((max(ys) - oy + 0.02) * 1000) + 1
+    canvas = Image.new("L", (W * SS, H * SS), 0)
+    d = ImageDraw.Draw(canvas)
+    for q in polys:
+        pts = [((p[0] - ox) * 1000 * SS, (H - (p[1] - oy) * 1000) * SS) for p in q]
+        if width:
+            d.line(pts + pts[:1], fill=255, width=int(width * 1000 * SS), joint="curve")
+        else:
+            d.polygon(pts, fill=255)
+    canvas = np.asarray(canvas.resize((W, H), Image.LANCZOS), float) / 255
+    cx = ((pmap[..., 0] - ox) * 1000).astype(int)
+    cy = (H - (pmap[..., 1] - oy) * 1000).astype(int)
+    valid = covered & (nmap[..., 2] > 0.35) & (cx >= 0) & (cx < W) & (cy >= 0) & (cy < H)
+    w = np.zeros(pmap.shape[:2])
+    w[valid] = canvas[cy[valid], cx[valid]]
+    return w
+
+def layers(a, hn, lay, pmap, nmap, covered):
+    """What Viet wears under his jacket, drawn on the body in body coordinates: a crew-neck
+    sweatshirt with ribbed neck and hem, a white shirt whose collar points lie out over the
+    neck rib, and the shirt's hem showing below the sweatshirt."""
+    L = lay["layers"]
+    x, y, z = pmap[..., 0], pmap[..., 1], pmap[..., 2]
+    near_neck = np.abs(x) < L["neck_half"]
+    top = np.where(near_neck, np.where(z > 0, L["neck_front"], L["neck_back"]), L["arm_top"])
+    worn = covered & (np.abs(x) < L["wrist_x"]) & (y < top) & (y > L["shirt_hem"])
+    sweat = worn & (y >= L["sweat_hem"])
+    rib = sweat & ((near_neck & (y > top - L["rib"])) | (y < L["sweat_hem"] + L["rib"]))
+    # Rib knit: fine vertical cords round the body.
+    cords = 0.88 + 0.12 * (0.5 + 0.5 * np.sin(np.arctan2(x, z) * L["rib_cords"]))
+    out = a.copy()
+    out[..., :3] = np.where(sweat[..., None], np.array(L["sweat"]), out[..., :3])
+    out[..., :3] = np.where(rib[..., None], np.array(L["rib_colour"]) * cords[..., None], out[..., :3])
+    out[..., :3] = np.where((worn & ~sweat)[..., None], np.array(L["shirt"]), out[..., :3])
+    edge = front_mask(pmap, nmap, covered, L["collar_points"], width=L["collar_edge"])[..., None]
+    out[..., :3] = out[..., :3] * (1 - edge) + np.array(L["collar_edge_colour"]) * edge
+    fill = front_mask(pmap, nmap, covered, L["collar_points"])[..., None]
+    out[..., :3] = out[..., :3] * (1 - fill) + np.array(L["shirt"]) * fill
+    out[..., 3] = np.where(worn, 1.0, out[..., 3])
+    return out
+
+ROLES = {f.__name__: f for f in (recolour, hair, hair_strands, hair_cap, hair_glow, jacket, hoodie, collar, shirt_skirt, skirt, boots, body, tie, glow, cup_shell, ring, cup_plate, cloth, bomber, layers)}
 NEEDS_COVERAGE = {ring, tie}
+NEEDS_SURFACE = {layers}
+
+def bands(a, pmap, covered, specs, lit):
+    """Level lines of light round the body at set heights, such as a line above a boot's sole."""
+    out = a
+    for s in specs:
+        m = covered & (np.abs(pmap[..., 1] - s["y"]) < s["width"] / 2)
+        out = out.copy()
+        out[..., :3] = np.where(m[..., None], ramp(np.full(m.shape, s["level"]), s["family"]), out[..., :3])
+        out = light(out, m, lit)
+    return out
 
 COMPONENT = {5121: np.uint8, 5123: np.uint16, 5125: np.uint32, 5126: np.float32}
 WIDTH = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4}
@@ -750,12 +841,17 @@ def main(src, dst, layout):
         holder[factor_key] = [1, 1, 1, 1] if slot == "base" else [1, 1, 1]
         pmap, nmap, covered = surface_maps(*tris[i], a.shape[1], a.shape[0])
         hn = np.clip(pmap[..., 1] / BODY_HEIGHT_M, 0, 1)
-        painted = fn(a, hn, lay, covered) if fn in NEEDS_COVERAGE else fn(a, hn, lay)
+        if fn in NEEDS_SURFACE:
+            painted = fn(a, hn, lay, pmap, nmap, covered)
+        else:
+            painted = fn(a, hn, lay, covered) if fn in NEEDS_COVERAGE else fn(a, hn, lay)
         if slot == "base":
             for spec in lay.get("fabrics", {}).get(key, []):
                 painted = fabric(painted, hn, spec)
             if key in lay.get("decals", {}):
                 painted = decals(painted, pmap, nmap, covered, lay["decals"][key], lay["light"])
+            if key in lay.get("bands", {}):
+                painted = bands(painted, pmap, covered, lay["bands"][key], lay["light"])
             # A look can cut part of a garment away: texels inside these boxes become transparent.
             for x0, y0, x1, y1 in lay.get("cut", {}).get(key, []):
                 painted[y0:y1, x0:x1, 3] = 0
