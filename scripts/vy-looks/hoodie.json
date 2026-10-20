@@ -88,13 +88,20 @@
   "8": "body",
   "13": "tie",
   "14": "glow",
-  "20": "cup_shell",
-  "21": "ring",
-  "22": "cup_plate",
-  "18": "hair",
+  "11": "hair_cap",
   "17": "hair_strands",
-  "24": "hair_strands",
-  "11": "hair_cap"
+  "18": "hair_strands",
+  "19": "hair_strands",
+  "25": "hair_strands",
+  "26": "hair_strands",
+  "27": "hair_strands",
+  "28": "hair_strands",
+  "29": "hair_strands",
+  "30": "hair_strands",
+  "20": "hair",
+  "22": "cup_shell",
+  "23": "ring",
+  "24": "cup_plate"
  },
  "upscale": {
   "13": 4
@@ -263,9 +270,16 @@
  ],
  "black": 0.06,
  "emissive_materials": {
-  "18": "hair_glow",
   "17": "hair_glow",
-  "24": "hair_glow"
+  "18": "hair_glow",
+  "19": "hair_glow",
+  "20": "hair_glow",
+  "25": "hair_glow",
+  "26": "hair_glow",
+  "27": "hair_glow",
+  "28": "hair_glow",
+  "29": "hair_glow",
+  "30": "hair_glow"
  },
  "hair": {
   "stops": [
@@ -278,7 +292,7 @@
     ]
    ],
    [
-    0.45,
+    0.62,
     [
      205,
      232,
@@ -938,5 +952,11 @@
     ]
    }
   ]
- }
+ },
+ "hair_collider_groups": [
+  "J_Bip_C_Spine",
+  "J_Bip_C_UpperChest",
+  "J_Bip_C_Neck",
+  "J_Bip_C_Head"
+ ]
 }

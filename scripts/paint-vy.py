@@ -676,7 +676,18 @@ def fabric(a, hn, spec):
     out[..., :3] = np.where(cloth[..., None], np.clip(colour * shade * spec["gain"], 0, 1), a[..., :3])
     return out
 
-ROLES = {f.__name__: f for f in (hair, hair_strands, hair_cap, hair_glow, jacket, hoodie, collar, shirt_skirt, skirt, boots, body, tie, glow, cup_shell, ring, cup_plate)}
+def recolour(a, hn, lay):
+    """Turn a garment to one colour, keeping its folds: every opaque texel takes the target colour
+    scaled by its own brightness against the garment's median."""
+    spec = lay["recolour"]
+    lum = a[..., :3].max(-1)
+    inside = a[..., 3] > 0.5
+    shade = np.clip(lum / np.median(lum[inside]), 0.4, 1.8)[..., None]
+    out = a.copy()
+    out[..., :3] = np.where(inside[..., None], np.clip(np.array(spec["colour"]) * shade, 0, 1), a[..., :3])
+    return out
+
+ROLES = {f.__name__: f for f in (recolour, hair, hair_strands, hair_cap, hair_glow, jacket, hoodie, collar, shirt_skirt, skirt, boots, body, tie, glow, cup_shell, ring, cup_plate)}
 NEEDS_COVERAGE = {ring, tie}
 
 COMPONENT = {5121: np.uint8, 5123: np.uint16, 5125: np.uint32, 5126: np.float32}
@@ -745,6 +756,9 @@ def main(src, dst, layout):
                 painted = fabric(painted, hn, spec)
             if key in lay.get("decals", {}):
                 painted = decals(painted, pmap, nmap, covered, lay["decals"][key], lay["light"])
+            # A look can cut part of a garment away: texels inside these boxes become transparent.
+            for x0, y0, x1, y1 in lay.get("cut", {}).get(key, []):
+                painted[y0:y1, x0:x1, 3] = 0
         out = io.BytesIO()
         Image.fromarray((painted.clip(0, 1) * 255).round().astype(np.uint8)).save(out, "PNG")
         img["mimeType"] = "image/png"
@@ -759,6 +773,17 @@ def main(src, dst, layout):
         if not kept:
             raise ValueError(f"removing materials {sorted(removed)} would leave mesh {mesh.get('name')} empty")
         mesh["primitives"] = kept
+    # Hair that hangs beside the arms is thrown outwards once the arms lower from the T-pose
+    # through it, so a look can limit the hair's collision to the named groups.
+    if "hair_collider_groups" in lay:
+        sb = gltf["extensions"]["VRMC_springBone"]
+        names = [g["name"] for g in sb["colliderGroups"]]
+        missing = set(lay["hair_collider_groups"]) - set(names)
+        if missing:
+            raise ValueError(f"no collider groups named {sorted(missing)}")
+        for spring in sb["springs"]:
+            if spring.get("name") == "Hair":
+                spring["colliderGroups"] = [g for g in spring.get("colliderGroups", []) if names[g] in lay["hair_collider_groups"]]
     packed = bytearray()
     for v, b in zip(views, blobs):
         packed += b"\0" * (-len(packed) % 4)
