@@ -57,9 +57,10 @@ export function useGuide(): GuideApi {
 
 interface Bubble {
   text: string;
-  /** Screen x of the character's centre and y of the top of her head. */
+  /** Screen x of the character's centre, y of the top of her head and y of her feet. */
   x: number;
   y: number;
+  feet: number;
   halfWidth: number;
   /** The side of the character that faces away from the target. */
   freeSide: "left" | "right";
@@ -191,7 +192,7 @@ export function VyGuideProvider({ children }: { children: React.ReactNode }) {
       // She glances at the feature while presenting it, then back at the reader as she explains.
       send({ type: "vy-look", x: r.left + r.width / 2, y: r.top + r.height / 2 });
       const glance = setTimeout(() => { if (!cancelled.current) send({ type: "vy-look", viewer: true }); }, GLANCE_MS);
-      setBubble({ text: step.say, x, y: feet - height, halfWidth: half, freeSide: pointsRight ? "left" : "right", last: i === TOUR.length - 1 });
+      setBubble({ text: step.say, x, y: feet - height, feet, halfWidth: half, freeSide: pointsRight ? "left" : "right", last: i === TOUR.length - 1 });
       await new Promise<void>((resolve) => { advance.current = resolve; });
       clearTimeout(glance);
       advance.current = null;
@@ -245,27 +246,45 @@ export function VyGuideProvider({ children }: { children: React.ReactNode }) {
 }
 
 const BUBBLE_WIDTH = 300;
+// Narrowest the bubble may be made to fit beside her; below this its text wraps too often to read.
+const MIN_SIDE_WIDTH = 170;
 const BUBBLE_GAP = 14;
 const SCREEN_MARGIN = 12;
 
-/** Above her head when it fits on screen, otherwise beside her head on the side away from the target. */
+/**
+ * Where the bubble goes so that it never covers her: above her head, below her feet, then
+ * beside her (the side away from the target first), narrowed to the room there. The height
+ * is the bubble's measured height at its current width; a narrower bubble is never shorter,
+ * so a placement ruled out at one width stays ruled out at a narrower one.
+ */
 function bubbleStyle(bubble: Bubble | null, height: number): React.CSSProperties {
   const W = window.innerWidth, H = window.innerHeight;
-  const clampX = (left: number) => Math.min(Math.max(left, SCREEN_MARGIN), W - BUBBLE_WIDTH - SCREEN_MARGIN);
-  if (!bubble) return { left: SCREEN_MARGIN, bottom: SCREEN_MARGIN, width: BUBBLE_WIDTH };
+  const full = Math.min(BUBBLE_WIDTH, W - 2 * SCREEN_MARGIN);
+  if (!bubble) return { left: SCREEN_MARGIN, bottom: SCREEN_MARGIN, width: full };
+  const centred = Math.min(Math.max(bubble.x - full / 2, SCREEN_MARGIN), W - full - SCREEN_MARGIN);
   if (bubble.y - BUBBLE_GAP - height >= SCREEN_MARGIN) {
-    return { left: clampX(bubble.x - BUBBLE_WIDTH / 2), bottom: H - bubble.y + BUBBLE_GAP, width: BUBBLE_WIDTH };
+    return { left: centred, bottom: H - bubble.y + BUBBLE_GAP, width: full };
   }
-  const left = bubble.freeSide === "right"
-    ? bubble.x + bubble.halfWidth + BUBBLE_GAP
-    : bubble.x - bubble.halfWidth - BUBBLE_GAP - BUBBLE_WIDTH;
-  return { left: clampX(left), top: Math.max(bubble.y, SCREEN_MARGIN), width: BUBBLE_WIDTH };
+  if (bubble.feet + BUBBLE_GAP + height <= H - SCREEN_MARGIN) {
+    return { left: centred, top: bubble.feet + BUBBLE_GAP, width: full };
+  }
+  const bodyLeft = bubble.x - bubble.halfWidth, bodyRight = bubble.x + bubble.halfWidth;
+  const room = { right: W - SCREEN_MARGIN - bodyRight - BUBBLE_GAP, left: bodyLeft - BUBBLE_GAP - SCREEN_MARGIN };
+  const other = bubble.freeSide === "right" ? "left" : "right";
+  const fits = (side: "left" | "right") => room[side] >= MIN_SIDE_WIDTH;
+  const side = fits(bubble.freeSide) ? bubble.freeSide : fits(other) ? other : room.left > room.right ? "left" : "right";
+  const width = Math.min(full, room[side]);
+  const left = side === "right" ? bodyRight + BUBBLE_GAP : bodyLeft - BUBBLE_GAP - width;
+  const top = Math.min(Math.max(bubble.y, SCREEN_MARGIN), H - SCREEN_MARGIN - height);
+  return { left, top, width };
 }
 
 function GuideBubble({ bubble, error, onNext, onClose }: { bubble: Bubble | null; error: string; onNext: () => void; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
-  useLayoutEffect(() => { if (ref.current) setHeight(ref.current.offsetHeight); }, [bubble, error]);
+  const style = bubbleStyle(bubble, height);
+  // Re-measured whenever the placement changes the bubble's width, since its text rewraps.
+  useLayoutEffect(() => { if (ref.current) setHeight(ref.current.offsetHeight); }, [bubble, error, style.width]);
   return (
     <div
       ref={ref}
@@ -273,7 +292,7 @@ function GuideBubble({ bubble, error, onNext, onClose }: { bubble: Bubble | null
       aria-live="polite"
       aria-label="Vy says"
       className="fixed z-[61] s2s-card p-4 animate-scale-in"
-      style={{ ...bubbleStyle(bubble, height), visibility: height ? "visible" : "hidden" }}
+      style={{ ...style, visibility: height ? "visible" : "hidden" }}
     >
       <p className="font-display font-extrabold text-[13px] text-primary">Vy</p>
       <p className="mt-1 text-[15px] leading-snug text-foreground">{error || bubble?.text}</p>
