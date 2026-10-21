@@ -15,7 +15,7 @@ export const SUPPORTED_LANGUAGES = [
 export const AVATARS = [
   { id: "vy", label: "Vy" },
   { id: "vy-hoodie", label: "Vy (hoodie)" },
-  { id: "viet", label: "Viet" },
+  { id: "huy", label: "Huy" },
   { id: "shino", label: "Shino" },
   { id: "shibu", label: "Shibu" },
   { id: "fumiriya", label: "Fumiriya" },

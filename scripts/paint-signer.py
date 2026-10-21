@@ -2,9 +2,9 @@
 
   python scripts/paint-signer.py assets/vy/uniform-export.vrm public/avatars/vy.vrm scripts/signer-looks/uniform.json
   python scripts/paint-signer.py assets/vy/hoodie-export.vrm public/avatars/vy-hoodie.vrm scripts/signer-looks/hoodie.json
-  python scripts/paint-signer.py assets/viet/viet-export.vrm public/avatars/viet.vrm scripts/signer-looks/viet.json
+  python scripts/paint-signer.py assets/huy/huy-export.vrm public/avatars/huy.vrm scripts/signer-looks/huy.json
 
-The exports come from the VRoid Studio projects beside them in assets/vy and assets/viet.
+The exports come from the VRoid Studio projects beside them in assets/vy and assets/huy.
 Requires numpy, scipy and Pillow. The look file maps the export's material indices to the
 roles below, holds the texel positions each role draws at (measured on that
 export's texture layout, so a re-export with a changed outfit needs them measured
@@ -18,7 +18,7 @@ glove bands and boot soles, shared out between the three colours; the hoodie's
 facings and panels; the ear glow and headphone ring; a black tie carrying a
 glitched V, a lead of light and a diamond cut by an X; decals drawn in body
 coordinates (the back emblem, the skirt sigil and Vy's mark on the stockings).
-Viet's: a black tactical parka with a deep blue hex-mesh panel round its lower half, its
+Huy's: a black tactical parka with a deep blue hex-mesh panel round its lower half, its
 printed accents in the three colours, a navy collar lining with a lit rim, lines round the
 cuffs and hem, a chest mark, a light down each side of the zip and a back sigil with
 circuit traces; cargo shorts with a blue lower block, thigh marks and lit hem lines over
@@ -792,7 +792,7 @@ def front_mask(pmap, nmap, covered, polys, width=0.0):
     return w
 
 def layers(a, hn, lay, pmap, nmap, covered):
-    """What Viet wears under his jacket, drawn on the body in body coordinates: a crew-neck
+    """What Huy wears under his jacket, drawn on the body in body coordinates: a crew-neck
     sweatshirt with ribbed neck and hem, a white shirt whose collar points lie out over the
     neck rib, and the shirt's hem showing below the sweatshirt."""
     L = lay["layers"]
