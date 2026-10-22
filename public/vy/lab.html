@@ -28,6 +28,7 @@
 <nav id="clips"></nav>
 <script type="module">
   // Plays every clip of the motion library. Query: ?model=<avatar id>&clip=<name>&ui=0&camera=full|upper|face&blink=0&turn=<degrees>
+  // &face=<expression>:<weight>,... holds those expression weights over whatever the clip sets.
   import * as THREE from "three";
   import { loadVrm, CLIPS, MotionPlayer, applySample, Life, Gaze, loadMotionIndex, loadMotions, IDLE } from "/vy/vy-core.js";
 
@@ -102,7 +103,12 @@
 
   const clock = new THREE.Clock();
   let springsReady = false;
-  window.vyLab = { play: select, time: () => clock.elapsedTime };
+  const face = (q.get("face") ?? "").split(",").filter(Boolean).map((pair) => {
+    const [name, weight] = pair.split(":");
+    if (!vrm.expressionManager.getExpression(name)) throw new Error(`face: the model has no expression "${name}"`);
+    return [name, Number(weight ?? 1)];
+  });
+  window.vyLab = { play: select, time: () => clock.elapsedTime, expressions: () => vrm.expressionManager.expressions.map((e) => e.expressionName) };
   if (q.get("clip")) await select(q.get("clip"));
 
   renderer.setAnimationLoop(() => {
@@ -118,6 +124,10 @@
       vrm.scene.updateMatrixWorld(true);
       vrm.springBoneManager?.reset();
       springsReady = true;
+    }
+    if (face.length) {
+      for (const e of vrm.expressionManager.expressions) if (e.expressionName !== "blink") vrm.expressionManager.setValue(e.expressionName, 0);
+      for (const [name, weight] of face) vrm.expressionManager.setValue(name, weight);
     }
     vrm.update(dt);
     renderer.render(scene, camera);
