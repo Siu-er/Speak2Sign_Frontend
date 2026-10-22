@@ -27,7 +27,7 @@
 <body>
 <nav id="clips"></nav>
 <script type="module">
-  // Plays every clip of the motion library. Query: ?model=<avatar id>&clip=<name>&ui=0&camera=full|upper|face&blink=0&turn=<degrees>
+  // Plays every clip of the motion library. Query: ?model=<avatar id>&clip=<name>&ui=0&camera=full|wide|upper|face&blink=0&turn=<degrees>
   // &face=<expression>:<weight>,... holds those expression weights over whatever the clip sets.
   import * as THREE from "three";
   import { loadVrm, CLIPS, MotionPlayer, applySample, Life, Gaze, loadMotionIndex, loadMotions, IDLE } from "/vy/vy-core.js";
@@ -60,6 +60,7 @@
     const shot = q.get("camera") ?? "full";
     const [top, bottom, halfWidth] = {
       full: [headY + 0.45, -0.05, 0.9],
+      wide: [headY + 0.85, -0.05, 1.1],
       upper: [headY + 0.45, headY * 0.55, 0.9],
       face: [headY + 0.3, headY - 0.1, 0.2],
     }[shot];
