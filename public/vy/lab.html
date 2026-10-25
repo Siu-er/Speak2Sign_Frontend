@@ -29,8 +29,11 @@
 <script type="module">
   // Plays every clip of the motion library. Query: ?model=<avatar id>&clip=<name>&ui=0&camera=full|wide|upper|face&blink=0&turn=<degrees>
   // &face=<expression>:<weight>,... holds those expression weights over whatever the clip sets.
+  // &gaze=camera keeps her eyes on the camera, so a still looks at its viewer whatever way the clip turns her head.
+  // &hold=<JSON {bone: [x, y, z] degrees}> holds those bones in that pose over whatever the clip sets, in the same
+  // Euler convention as the hand-keyed clips.
   import * as THREE from "three";
-  import { loadVrm, CLIPS, MotionPlayer, applySample, Life, Gaze, loadMotionIndex, loadMotions, IDLE } from "/vy/vy-core.js";
+  import { loadVrm, CLIPS, MotionPlayer, applySample, sampleClip, Life, Gaze, loadMotionIndex, loadMotions, IDLE } from "/vy/vy-core.js";
 
   const q = new URLSearchParams(location.search);
   const MODEL = q.get("model");
@@ -109,17 +112,28 @@
     if (!vrm.expressionManager.getExpression(name)) throw new Error(`face: the model has no expression "${name}"`);
     return [name, Number(weight ?? 1)];
   });
-  window.vyLab = { play: select, time: () => clock.elapsedTime, expressions: () => vrm.expressionManager.expressions.map((e) => e.expressionName) };
+  const holdPose = q.get("hold") ? JSON.parse(q.get("hold")) : null;
+  const hold = holdPose && Object.fromEntries(Object.entries(sampleClip({ keys: [{ t: 0, pose: holdPose }, { t: 1, pose: holdPose }] }, 0, 1).bones)
+    .filter(([name]) => name in holdPose));
+  // tile(cols, rows, col, row) draws one cell of the frame enlarged cols x rows times (tile() restores the whole
+  // frame), so a still larger than the WebGL drawing-buffer limit is rendered as tiles of one frozen pose.
+  const tile = (cols, rows, col, row) => {
+    if (cols === undefined) return camera.clearViewOffset();
+    camera.setViewOffset(cols * innerWidth, rows * innerHeight, col * innerWidth, row * innerHeight, innerWidth, innerHeight);
+  };
+  window.vyLab = { play: select, tile, time: () => clock.elapsedTime, expressions: () => vrm.expressionManager.expressions.map((e) => e.expressionName) };
   if (q.get("clip")) await select(q.get("clip"));
 
   renderer.setAnimationLoop(() => {
     const dt = Math.min(clock.getDelta(), 1 / 30);
     const t = clock.elapsedTime;
     const s = player.sample(t);
+    if (hold) Object.assign(s.bones, hold);
     applySample(vrm, s, hipsRest);
     vrm.scene.rotation.y = facing + s.turn;
     life.apply(vrm, t);
     gaze.apply(t, dt);
+    if (q.get("gaze") === "camera") gaze.target.position.copy(camera.position);
     if (q.get("blink") === "0") vrm.expressionManager?.setValue("blink", 0);
     if (!springsReady) {
       vrm.scene.updateMatrixWorld(true);
