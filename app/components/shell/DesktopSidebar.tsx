@@ -26,8 +26,8 @@ const SECTIONS = [
   },
 ];
 
-// Screens that are complete on their own: the Meet side panel and the introduction.
-const STANDALONE = ["/meet", "/onboarding"];
+// Screens that are complete on their own: the Meet side panel, the introduction and the booth screen.
+const STANDALONE = ["/meet", "/onboarding", "/try"];
 
 /**
  * Desktop navigation: every section of the app, and a QR code that opens S2S

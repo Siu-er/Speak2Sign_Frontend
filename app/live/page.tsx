@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Send, Globe, TriangleAlert } from "lucide-react";
 import { PageShell } from "@/app/components/shell/PageShell";
 import { SignAvatar, AvatarClip } from "@/app/components/avatar/SignAvatar";
@@ -56,6 +56,15 @@ export default function LivePage() {
   }, [lang, enqueue, signText]);
 
   const speech = useLiveSpeech({ onFinal: say, lang });
+
+  // A link can hand Live Sign a sentence to sign on arrival (/live?say=...).
+  const arrived = useRef(false);
+  useEffect(() => {
+    if (arrived.current) return;
+    arrived.current = true;
+    const sentence = new URLSearchParams(window.location.search).get("say")?.trim();
+    if (sentence) enqueue(() => signText(sentence));
+  }, [enqueue, signText]);
 
   const submitText = (e: React.FormEvent) => {
     e.preventDefault();
