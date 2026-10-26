@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Mic, Video, Sparkles, BookOpen, Target, MonitorPlay, QrCode, X, ArrowRight, Footprints } from "lucide-react";
+import { Mic, Video, Sparkles, BookOpen, Target, MonitorPlay, QrCode, X, ArrowRight, Footprints, Play } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { AppShell } from "@/app/components/shell/AppShell";
 import { TopHeader } from "@/app/components/shell/TopHeader";
@@ -41,13 +41,23 @@ export default function HomePage() {
           <p className="mt-2 text-muted-foreground text-[14px] leading-relaxed max-w-[34ch] lg:mt-4 lg:text-[18px] lg:max-w-[40ch]">
             Start a live conversation, or explore the other ways to use sign language.
           </p>
-          <button
-            onClick={guide.start}
-            disabled={guide.running}
-            className="mt-3 inline-flex items-center gap-2 rounded-full s2s-card px-4 py-2 text-[13px] font-bold text-primary s2s-press disabled:opacity-60 lg:mt-5 lg:text-[14px]"
-          >
-            <Footprints className="w-4 h-4" /> Take the tour with Vy
-          </button>
+          <div className="mt-3 flex flex-wrap items-center gap-2 lg:mt-5">
+            <button
+              onClick={() => guide.start("guided")}
+              disabled={guide.running}
+              className="inline-flex items-center gap-2 rounded-full s2s-card px-4 py-2 text-[13px] font-bold text-primary s2s-press disabled:opacity-60 lg:text-[14px]"
+            >
+              <Footprints className="w-4 h-4" /> Take the tour with Vy
+            </button>
+            <button
+              onClick={() => guide.start("auto")}
+              disabled={guide.running}
+              title="Vy tours the app on her own, round after round, until someone touches the screen"
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-bold text-muted-foreground hover:text-primary s2s-press disabled:opacity-60 lg:text-[14px]"
+            >
+              <Play className="w-4 h-4" /> Auto tour
+            </button>
+          </div>
         </section>
 
         <Link

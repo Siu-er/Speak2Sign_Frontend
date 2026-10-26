@@ -118,10 +118,11 @@ export default function LivePage() {
               </form>
             </div>
 
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 lg:flex-wrap lg:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {PHRASES.map((p) => (
+            <div data-guide="live-phrases" className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 lg:flex-wrap lg:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {PHRASES.map((p, i) => (
                 <button
                   key={p}
+                  data-guide={i === 0 ? "live-first-phrase" : undefined}
                   onClick={() => { setSource(""); enqueue(() => signText(p)); }}
                   className="shrink-0 px-3.5 py-1.5 rounded-full s2s-card text-[13px] font-semibold text-foreground hover:text-primary whitespace-nowrap s2s-press"
                 >

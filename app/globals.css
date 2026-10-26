@@ -247,6 +247,11 @@
 }
 .s2s-burst-piece { position: absolute; left: 50%; top: 50%; border-radius: 3px; animation: s2s-burst 900ms var(--ease-out) forwards; }
 .animate-ribbon-flow { background-size: 200% 100%; animation: s2s-ribbon-flow 2.4s linear infinite; }
+/* The guide: an auto-tour line filling over its reading time, and the spotlight's ring breathing outward. */
+@keyframes s2s-guide-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.animate-guide-fill { animation: s2s-guide-fill linear forwards; }
+@keyframes s2s-guide-pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.05); opacity: 0; } }
+.animate-guide-pulse { animation: s2s-guide-pulse 1.8s var(--ease-out) infinite; }
 
 /* Aurora backdrop: three clouds in the logo's colours with fine grain. It is
    still: glass panels blur what lies behind them, and a moving backdrop would
@@ -284,7 +289,7 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up, .animate-scale-in,
   .animate-pulse-dot, .s2s-record-ring::before, .animate-page-in, .animate-ribbon-flow,
-  .s2s-shimmer, .s2s-burst-piece { animation: none; }
+  .s2s-shimmer, .s2s-burst-piece, .animate-guide-pulse { animation: none; }
   .s2s-burst-piece { display: none; }
   .s2s-press:active, .s2s-lift:hover { transform: none; }
 }

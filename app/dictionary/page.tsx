@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Search, Hand, TriangleAlert } from "lucide-react";
+import { Search, Hand, TriangleAlert, MapPin, MoveRight, Play } from "lucide-react";
 import { PageShell } from "@/app/components/shell/PageShell";
 import { SignAvatar, AvatarClip } from "@/app/components/avatar/SignAvatar";
 import { textToSign } from "@/app/lib/pipeline/backend";
@@ -14,7 +14,26 @@ const CATEGORIES: Record<string, string[]> = {
   Time: ["today", "tomorrow", "yesterday", "now", "morning", "night", "week", "year"],
   Places: ["home", "school", "hospital", "store", "work", "bathroom"],
 };
-const CATS = Object.keys(CATEGORIES);
+
+// Popular signs written out, so a sign can be learnt by reading as well as by watching.
+// Each describes the standard ASL form with the dominant hand.
+const STEP_SIGNS: { word: string; hand: string; place: string; move: string }[] = [
+  { word: "hello", hand: "Flat hand, fingers together.", place: "Fingertips beside your forehead, palm facing out.", move: "Move it out and away, like a small salute." },
+  { word: "thank you", hand: "Flat hand, fingers together.", place: "Fingertips touching your chin.", move: "Bring the hand forward and down, towards the person." },
+  { word: "please", hand: "Flat hand, palm on your body.", place: "The middle of your chest.", move: "Rub a circle on your chest." },
+  { word: "sorry", hand: "Closed fist, thumb resting on the side.", place: "The middle of your chest.", move: "Rub a circle on your chest." },
+  { word: "yes", hand: "Closed fist.", place: "In front of your shoulder.", move: "Bend the wrist up and down, like a nodding head." },
+  { word: "help", hand: "Thumbs-up fist resting on your other, flat palm.", place: "In front of your chest.", move: "Lift both hands up together." },
+  { word: "friend", hand: "Both index fingers hooked.", place: "In front of your chest.", move: "Hook them together, swap which is on top, and hook again." },
+  { word: "name", hand: "Both hands: index and middle fingers out, together.", place: "In front of your chest, one hand above the other.", move: "Tap the top fingers across the lower ones twice." },
+];
+const STEP_PARTS = [
+  { key: "hand", label: "Hand shape", Icon: Hand },
+  { key: "place", label: "Where", Icon: MapPin },
+  { key: "move", label: "Movement", Icon: MoveRight },
+] as const;
+const STEP_TAB = "Step by step";
+const CATS = [STEP_TAB, ...Object.keys(CATEGORIES)];
 
 export default function DictionaryPage() {
   const [cat, setCat] = useState(CATS[0]);
@@ -44,7 +63,7 @@ export default function DictionaryPage() {
   const words = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (q) return Object.values(CATEGORIES).flat().filter((w) => w.includes(q));
-    return CATEGORIES[cat];
+    return CATEGORIES[cat] ?? [];
   }, [cat, query]);
 
   const isFingerspelled = !!current && current.spelled.length > 0 && current.gloss.startsWith("FS-");
@@ -91,8 +110,49 @@ export default function DictionaryPage() {
         </div>
       )}
 
+      {/* popular signs, written out step by step */}
+      {!query && cat === STEP_TAB && (
+        <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
+          {STEP_SIGNS.map((s, k) => {
+            const on = current?.word === s.word;
+            return (
+              <article
+                key={s.word}
+                className={`relative overflow-hidden rounded-[24px] p-4 s2s-card animate-fade-up transition-shadow duration-300 lg:p-5 ${on ? "bg-white ring-2 ring-primary/30 shadow-pill-soft" : ""}`}
+                style={{ animationDelay: `${k * 45}ms` }}
+              >
+                <span aria-hidden="true" className={`absolute inset-x-0 top-0 h-1 s2s-ribbon transition-opacity duration-300 ${on ? "opacity-100" : "opacity-0"}`} />
+                <header className="flex items-center justify-between gap-3">
+                  <h3 className="font-display font-extrabold text-[22px] leading-tight capitalize text-foreground lg:text-[25px]">{s.word}</h3>
+                  <button
+                    onClick={() => sign(s.word)}
+                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-bold s2s-press lg:text-[13px] ${on ? "bg-gradient-primary text-white shadow-pill-soft" : "bg-primary-soft text-primary"}`}
+                  >
+                    <Play className="w-3.5 h-3.5" /> Watch Vy
+                  </button>
+                </header>
+                <ol className="mt-3.5 space-y-3">
+                  {STEP_PARTS.map(({ key, label, Icon }, i) => (
+                    <li key={key} className="flex gap-3">
+                      <span className="relative grid place-items-center w-9 h-9 shrink-0 rounded-full bg-primary-soft text-primary">
+                        <Icon className="w-4 h-4" />
+                        <span className="absolute -top-1 -right-1 grid place-items-center w-4 h-4 rounded-full bg-primary text-white text-[10px] font-extrabold">{i + 1}</span>
+                      </span>
+                      <p className="min-w-0 text-[14px] leading-snug text-foreground lg:text-[15px]">
+                        <span className="block text-[11px] font-bold text-muted-foreground lg:text-[12px]">{label}</span>
+                        {s[key]}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
       {/* word grid */}
-      <div className="flex-1 min-h-0 overflow-y-auto -mx-1 px-1 lg:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className={`flex-1 min-h-0 overflow-y-auto -mx-1 px-1 lg:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${!query && cat === STEP_TAB ? "hidden" : ""}`}>
         <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3 lg:gap-3.5">
           {words.map((w) => (
             <button key={w} onClick={() => sign(w)} className={`px-4 py-3.5 lg:py-5 lg:text-[16px] rounded-[18px] text-[15px] font-bold capitalize text-left s2s-press ${current?.word === w ? "bg-gradient-primary text-white shadow-pill" : "s2s-card text-foreground hover:text-primary"}`}>{w}</button>
