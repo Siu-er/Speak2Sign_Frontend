@@ -20,8 +20,6 @@ interface Props {
   showGlosses?: boolean;
   /** Offer a control that signs the last sentence again. */
   replayable?: boolean;
-  /** Called with the clip being signed when a sentence starts, and with null when it ends. */
-  onPlayingChange?: (clip: AvatarClip | null) => void;
   className?: string;
 }
 
@@ -41,7 +39,7 @@ const RADIUS: Record<Variant, string> = {
  * (/vrm-frame.html) that signs one sentence at a time and reports which sign is
  * on screen, which drives the gloss captions here.
  */
-export function SignAvatar({ clips, variant = "stage", showGlosses = false, replayable = false, onPlayingChange, className = "" }: Props) {
+export function SignAvatar({ clips, variant = "stage", showGlosses = false, replayable = false, className = "" }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { settings } = useSettings();
   const [ready, setReady] = useState(false);
@@ -95,10 +93,6 @@ export function SignAvatar({ clips, variant = "stage", showGlosses = false, repl
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, [send]);
-
-  const onPlayingChangeRef = useRef(onPlayingChange);
-  onPlayingChangeRef.current = onPlayingChange;
-  useEffect(() => { onPlayingChangeRef.current?.(playing); }, [playing]);
 
   useEffect(() => {
     const fresh = clips.slice(deliveredRef.current);
