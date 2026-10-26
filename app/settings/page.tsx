@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { Globe, Volume2, Type, Contrast, Vibrate, User } from "lucide-react";
+import { Globe, Volume2, Type, Contrast, Vibrate, User, KeyRound } from "lucide-react";
 import { AppShell } from "@/app/components/shell/AppShell";
 import { TopHeader } from "@/app/components/shell/TopHeader";
 import { SectionHeading } from "@/app/components/primitives/SectionHeading";
@@ -163,6 +163,25 @@ export default function SettingsPage() {
             description="Physical vibration for alerts and transcription milestones."
             value={s.haptic}
             onChange={(v) => update({ haptic: v })}
+          />
+        </div>
+
+        {/* Team device */}
+        <div className="mt-4 s2s-card p-5 lg:mt-0 lg:mb-6 break-inside-avoid">
+          <SettingHead
+            icon={<KeyRound className="w-4 h-4" />}
+            title="Team device"
+            description="The S2S team's key. With it, this device is never asked to wait between translations."
+          />
+          <input
+            type="password"
+            autoComplete="off"
+            spellCheck={false}
+            aria-label="Team device key"
+            placeholder="Team key"
+            value={s.deviceKey}
+            onChange={(e) => update({ deviceKey: e.target.value.trim() })}
+            className="mt-4 w-full h-12 px-4 rounded-2xl bg-white border border-border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 

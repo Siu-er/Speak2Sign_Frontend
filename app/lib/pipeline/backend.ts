@@ -5,12 +5,38 @@
  * non-OK response so callers surface the exact stage that broke.
  */
 
+import { getSettings } from "@/app/lib/config/settings-store";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const DEVICE_ID_KEY = "s2s:device-id";
+
+let sessionDeviceId: string | null = null;
+
+/** A random ID this browser keeps, so the API limits each device on its own
+ *  even when a whole venue reaches it from one network address. Without
+ *  storage it lasts for the page's lifetime. */
+function deviceId(): string {
+  try {
+    const stored = localStorage.getItem(DEVICE_ID_KEY);
+    if (stored) return stored;
+    const id = crypto.randomUUID();
+    localStorage.setItem(DEVICE_ID_KEY, id);
+    return id;
+  } catch {
+    sessionDeviceId ??= crypto.randomUUID();
+    return sessionDeviceId;
+  }
+}
+
+function clientHeaders(): Record<string, string> {
+  const key = getSettings().deviceKey;
+  return { "X-S2S-Device-Id": deviceId(), ...(key ? { "X-S2S-Device-Key": key } : {}) };
+}
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const resp = await fetch(`${API_URL}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...clientHeaders() },
     body: JSON.stringify(body),
   });
   if (!resp.ok) {
@@ -79,7 +105,7 @@ export interface RecognitionResult {
 export async function recognizeVideo(clip: Blob): Promise<RecognitionResult> {
   const form = new FormData();
   form.append("video", clip, "phrase.webm");
-  const resp = await fetch(`${API_URL}/video-to-sentence`, { method: "POST", body: form });
+  const resp = await fetch(`${API_URL}/video-to-sentence`, { method: "POST", body: form, headers: clientHeaders() });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
     throw new Error(err.error || `video-to-sentence failed: HTTP ${resp.status}`);

@@ -37,6 +37,8 @@ export interface AppSettings {
   avatar: AvatarId;
   /** Draw a live hand-landmark skeleton over the signer's camera preview. */
   showLandmarks: boolean;
+  /** The team's device key, which lifts the API's request limits; empty on a visitor's device. */
+  deviceKey: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -49,6 +51,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   recordingHistory: true,
   avatar: "vy",
   showLandmarks: false,
+  deviceKey: "",
 };
 
 /** Whether the chosen spoken language needs translation to English. */
@@ -78,5 +81,6 @@ export function sanitizeSettings(stored: unknown): AppSettings {
     recordingHistory: bool(s.recordingHistory, d.recordingHistory),
     avatar: isAvatarId(s.avatar) ? s.avatar : d.avatar,
     showLandmarks: bool(s.showLandmarks, d.showLandmarks),
+    deviceKey: typeof s.deviceKey === "string" ? s.deviceKey.trim() : d.deviceKey,
   };
 }
